@@ -1,0 +1,192 @@
+﻿@model IEnumerable<EyelixEyewear_Project.Models.Product>
+
+@{
+    ViewData["Title"] = "Glasses Collection";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/products.css">
+}
+
+<div class="hero-banner">
+    <img src="~/images/banner/jaehyun.jpg" alt="Glasses Collection Banner" class="hero-banner-image">
+    <div class="page-title">
+        <h1>Glasses Collection</h1>
+        <p>Discover our sustainable and stylish eyewear collection</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="product-content-wrapper">
+
+        <aside class="sidebar product-sidebar">
+            <div class="filter-section-sidebar">
+                <div class="filter-header" onclick="toggleFilterSection(this)">
+                    <span>Material</span>
+                    <span class="toggle-icon">▲</span>
+                </div>
+                <ul class="filter-content filter-list">
+                    <li class="filter-option" data-filter-type="material" data-value="Acetate">Acetate</li>
+                    <li class="filter-option" data-filter-type="material" data-value="Metal">Metal</li>
+                </ul>
+            </div>
+
+            <div class="filter-section-sidebar">
+                <div class="filter-header" onclick="toggleFilterSection(this)">
+                    <span>Color</span>
+                    <span class="toggle-icon">▲</span>
+                </div>
+                <ul class="filter-content filter-color-list">
+                    <li class="color-filter-option" data-filter-type="color" data-value="black"><div class="color-swatch black"></div><span class="filter-option-label">Black</span></li>
+                    <li class="color-filter-option" data-filter-type="color" data-value="tortoise"><div class="color-swatch tortoise"></div><span class="filter-option-label">Tortoise</span></li>
+                    <li class="color-filter-option" data-filter-type="color" data-value="gold"><div class="color-swatch gold"></div><span class="filter-option-label">Gold</span></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="product-main-content">
+            <div class="filter-section">
+                <div class="filters">
+                    <button class="filter-btn active" data-filter="all">All Products</button>
+                    <button class="filter-btn" data-filter="bestseller">Bestsellers</button>
+                    <button class="filter-btn" data-filter="new">New In</button>
+                    <button class="filter-btn" data-filter="sale">Sale</button>
+                </div>
+                <select class="sort-dropdown" id="sortBy">
+                    <option value="featured">Featured</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="newest">Newest</option>
+                </select>
+            </div>
+
+            <div class="products-grid" id="productsGrid">
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        // --- LOGIC TÍNH TOÁN HIỂN THỊ ---
+                        // 1. Tính rating trung bình
+                        double rating = item.Reviews != null && item.Reviews.Any() ? item.Reviews.Average(r => r.Rating) : 5;
+                        int reviewCount = item.Reviews?.Count ?? 0;
+
+                        // 2. Xác định Badge (New/Sale)
+                        string badgeClass = "";
+                        string badgeText = "";
+                        if (item.DiscountPrice.HasValue) { badgeClass = "sale"; badgeText = "Sale"; }
+                        else if (item.CreatedAt > DateTime.Now.AddDays(-30)) { badgeClass = "new"; badgeText = "New"; }
+
+                        // 3. Tạo chuỗi filter cho JS đọc (ví dụ: "all sale bestseller")
+                        string filterData = "all";
+                        if (!string.IsNullOrEmpty(badgeClass)) { filterData += " " + badgeClass; }
+                        // Giả lập logic bestseller: nếu bán > 10 (cần thêm trường Sold trong DB nếu muốn chính xác)
+                        if (reviewCount > 5) { filterData += " bestseller"; }
+
+                        // --- BẮT ĐẦU RENDER HTML ---
+                        // Thay vì thẻ <a> bao trùm, dùng <div> class="product-item" để chứa các nút bấm
+                        <div class="product-item"
+                             data-price="@((int)item.Price)"
+                             data-product-id="@item.Id"
+                             data-filter="@filterData">
+
+                            <div class="product-image">
+                                <a href="@Url.Action("Detail", "Product", new { id = item.Id })" title="@item.Name">
+                                    <img src="@item.ImageUrl" alt="@item.Name" style="transition: opacity 0.3s ease;">
+                                </a>
+                                @if (!string.IsNullOrEmpty(badgeClass))
+                                {
+                                    <div class="product-badge @badgeClass">@badgeText</div>
+                                }
+                            </div>
+
+                            <div class="product-info">
+                                <div class="product-category">@item.Category?.Name</div>
+
+                                <div class="product-title">
+                                    <a href="@Url.Action("Detail", "Product", new { id = item.Id })" class="product-title-link">@item.Name</a>
+                                </div>
+
+                                @if (item.ProductVariants != null && item.ProductVariants.Any())
+                                {
+                                    <div class="product-variations">
+                                        <div class="color-option active"
+                                             onclick="changeProductImage(this, '@item.ImageUrl')"
+                                             title="@item.Color"
+                                             style="background-color: @(item.Color?.ToLower() ?? "black")"></div>
+
+                                        @foreach (var variant in item.ProductVariants)
+                                        {
+                                            // Demo: lấy tên variant làm class màu hoặc background color
+                                            <div class="color-option"
+                                                 onclick="changeProductImage(this, '@item.ImageUrl')"
+                                                 title="@variant.VariantName"
+                                                 style="background-color: @variant.VariantName.ToLower()">
+                                            </div>
+                                        }
+                                    </div>
+                                }
+
+                                <div class="product-rating">
+                                    <div class="star">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= Math.Floor(rating))
+                                            {
+                                                <i class="fas fa-star"></i>
+                                            }
+                                            else if (i == Math.Ceiling(rating) && rating % 1 != 0)
+                                            {
+
+                                                <i class="fas fa-star-half-alt"></i>
+                                            }
+                                            else
+                                            {
+
+                                                <i class="far fa-star"></i>
+                                            }
+                                        }
+                                    </div>
+                                    <span class="rating-count">(@reviewCount)</span>
+                                </div>
+
+                                <div class="product-price @(item.DiscountPrice.HasValue ? "sale" : "")">
+                                    @if (item.DiscountPrice.HasValue)
+                                    {
+                                        <span class="original">@item.Price.ToString("#,##0") VND</span>
+                                        <span>@item.DiscountPrice.Value.ToString("#,##0") VND</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@item.Price.ToString("#,##0") VND</span>
+                                    }
+                                </div>
+
+                                <div class="product-actions">
+                                    <form asp-controller="Order" asp-action="AddToCart" method="post" style="display:inline;">
+                                        <input type="hidden" name="productId" value="@item.Id" /> <input type="hidden" name="quantity" value="1" />
+                                        <button class="btn-add-cart" onclick="addToCartAjax(@item.Id)">
+                                            Add to cart
+                                        </button>
+                                    </form>
+                                    <button class="btn-wishlist" onclick="toggleWishlist(this)">♡</button>
+                                </div>
+
+                                <div style="font-size: 12px; color: #687279; margin-top: 0.5rem;">
+                                    @(item.Stock > 0 ? $"{item.Stock} in stock" : "Out of stock")
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p>No products found.</p>
+                }
+            </div>
+        </main>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/products.js"></script>
+}

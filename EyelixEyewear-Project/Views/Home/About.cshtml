@@ -1,0 +1,91 @@
+﻿@* Views/Home/About.cshtml *@
+
+@{
+    ViewData["Title"] = "About Us";
+}
+
+<div class="hero-banner">
+    <img src="~/images/banner/about-banner.jpg" alt="About Eyelix" class="hero-banner-image">
+    <div class="page-title">
+        <h1>About Us</h1>
+        <p>Discover the story of Eyelix Eyewear</p>
+    </div>
+</div>
+
+<section class="about-content" style="padding: 80px 0;">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <h2 style="font-size: 42px; margin-bottom: 30px; color: var(--primary-color);">Our Story</h2>
+                <p style="font-size: 16px; line-height: 1.8; color: #666; margin-bottom: 20px;">
+                    Eyelix was founded with a passion for creating eyewear products that are not only fashionable but also environmentally friendly. 
+                    We believe that style and responsibility can go hand in hand.
+                </p>
+                <p style="font-size: 16px; line-height: 1.8; color: #666; margin-bottom: 20px;">
+                    From the early days, we have been committed to using recycled materials and carbon-negative production processes. 
+                    Each Eyelix product is handcrafted with meticulous attention to every detail.
+                </p>
+                <a asp-controller="Home" asp-action="OurMission" class="btn-primary" style="margin-top: 20px;">Learn About Our Mission</a>
+            </div>
+            <div class="col-lg-6">
+                <img src="~/images/about/our-story.jpg" alt="Our Story" style="width: 100%; border-radius: 8px;">
+            </div>
+        </div>
+    </div>
+</section>
+
+<section style="background: var(--bg-light); padding: 80px 0;">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-4 mb-4">
+                <div style="padding: 30px;">
+                    <i class="fas fa-leaf" style="font-size: 48px; color: var(--primary-color); margin-bottom: 20px;"></i>
+                    <h3 style="font-size: 24px; margin-bottom: 15px;">Sustainable</h3>
+                    <p style="color: #666;">Using 95% recycled materials in production</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div style="padding: 30px;">
+                    <i class="fas fa-hand-holding-heart" style="font-size: 48px; color: var(--primary-color); margin-bottom: 20px;"></i>
+                    <h3 style="font-size: 24px; margin-bottom: 15px;">Handcrafted</h3>
+                    <p style="color: #666;">Each product is meticulously handcrafted</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div style="padding: 30px;">
+                    <i class="fas fa-star" style="font-size: 48px; color: var(--primary-color); margin-bottom: 20px;"></i>
+                    <h3 style="font-size: 24px; margin-bottom: 15px;">Quality</h3>
+                    <p style="color: #666;">Commitment to premium quality for every product</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section style="padding: 80px 0;">
+    <div class="container">
+        <h2 style="text-align: center; font-size: 42px; margin-bottom: 60px;">Our Team</h2>
+        <div class="row">
+            <div class="col-md-3 text-center mb-4">
+                <img src="~/images/team/member1.jpg" alt="Team Member" style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover; margin-bottom: 20px;">
+                <h4>John Smith</h4>
+                <p style="color: #666;">Chief Executive Officer</p>
+            </div>
+            <div class="col-md-3 text-center mb-4">
+                <img src="~/images/team/member2.jpg" alt="Team Member" style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover; margin-bottom: 20px;">
+                <h4>Jane Doe</h4>
+                <p style="color: #666;">Design Director</p>
+            </div>
+            <div class="col-md-3 text-center mb-4">
+                <img src="~/images/team/member3.jpg" alt="Team Member" style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover; margin-bottom: 20px;">
+                <h4>Mike Johnson</h4>
+                <p style="color: #666;">Production Manager</p>
+            </div>
+            <div class="col-md-3 text-center mb-4">
+                <img src="~/images/team/member4.jpg" alt="Team Member" style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover; margin-bottom: 20px;">
+                <h4>Sarah Williams</h4>
+                <p style="color: #666;">Marketing Director</p>
+            </div>
+        </div>
+    </div>
+</section>

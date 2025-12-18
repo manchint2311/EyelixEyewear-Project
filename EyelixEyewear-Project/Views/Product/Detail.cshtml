@@ -1,0 +1,192 @@
+﻿@model EyelixEyewear_Project.Models.ViewModels.ProductDetailViewModel
+
+@{
+    ViewData["Title"] = Model.Product.Name;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/detail-product.css">
+}
+
+<main class="product-detail">
+    <div class="container">
+        <div class="product-wrapper">
+            <div class="product-gallery">
+                <div class="main-image">
+                    <img src="@Model.Product.ImageUrl" alt="@Model.Product.Name" id="mainImage">
+                </div>
+                <div class="thumbnail-gallery">
+                    <div class="thumbnail active" onclick="changeImage('@Model.Product.ImageUrl', this)">
+                        <img src="@Model.Product.ImageUrl" alt="Main View">
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-info-section">
+                <div class="product-meta">
+                    <p class="category-info">
+                        <span class="meta-label">Category:</span>
+                        <span class="meta-value">@Model.Product.Category?.Name</span>
+                    </p>
+                    <p class="sku-info">
+                        <span class="meta-label">SKU:</span>
+                        <span class="meta-value">EYE-@Model.Product.Id.ToString("D4")</span>
+                    </p>
+                </div>
+
+                <h1 class="product-title">@Model.Product.Name</h1>
+
+                <div class="product-price">
+                    @if (Model.Product.DiscountPrice.HasValue)
+                    {
+                        <span style="text-decoration: line-through; color: #999; font-size: 0.8em; margin-right: 10px;">
+                            @Model.Product.Price.ToString("#,##0") VND
+                        </span>
+                        <span>@Model.Product.DiscountPrice.Value.ToString("#,##0") VND</span>
+                    }
+                    else
+                    {
+                        <span>@Model.Product.Price.ToString("#,##0") VND</span>
+                    }
+                </div>
+
+                <div class="vat-label">VAT included</div>
+                <p class="stock-info">@Model.Product.Stock in stock</p>
+
+                <p class="product-description">
+                    @Model.Product.Description
+                </p>
+
+                @if (Model.Product.ProductVariants != null && Model.Product.ProductVariants.Any())
+                {
+                    <div class="color-section">
+                        <label>Variants</label>
+                        <div class="color-options">
+                            @foreach (var variant in Model.Product.ProductVariants)
+                            {
+                                <span class="badge bg-light text-dark border">@variant.VariantName</span>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="quantity-cart-section">
+                    <div class="quantity-selector">
+                        <button type="button" class="quantity-btn" onclick="decreaseQuantity()">-</button>
+                        <input type="number" class="quantity-input" value="1" min="1" id="quantity" name="quantity">
+                        <button type="button" class="quantity-btn" onclick="increaseQuantity()">+</button>
+                    </div>
+
+                    <form asp-controller="Order" asp-action="AddToCart" method="post" style="display:inline;">
+                        <input type="hidden" name="productId" value="@Model.Product.Id" /> <input type="hidden" name="quantity" value="1" />
+                        <button class="btn-add-cart" onclick="addToCartAjax(@Model.Product.Id)">
+                            Add to cart
+                        </button>
+                    </form>
+
+                    <button type="button" class="wishlist-btn" onclick="toggleWishlist(this)">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+
+                <div class="shipping-info">
+                    <h3>Shipping Information</h3>
+                    <table class="shipping-table">
+                        <tbody>
+                            <tr>
+                                <td>Nationwide</td>
+                                <td>Standard Shipping – 30.000 VND</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="product-tabs">
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="openTab(event, 'description')">Description</button>
+                <button class="tab-btn" onclick="openTab(event, 'additional')">Additional Info</button>
+                <button class="tab-btn" onclick="openTab(event, 'reviews')">Reviews (@Model.Product.Reviews.Count)</button>
+            </div>
+
+            <div id="description" class="tab-content active">
+                <div class="description-content">
+                    <p>@Model.Product.Description</p>
+                </div>
+            </div>
+
+            <div id="additional" class="tab-content">
+                <div class="description-content">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 15px; font-weight: 600;">Material</td>
+                            <td style="padding: 15px; color: #666;">@Model.Product.FrameMaterial</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 15px; font-weight: 600;">Shape</td>
+                            <td style="padding: 15px; color: #666;">@Model.Product.FrameShape</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 15px; font-weight: 600;">Color</td>
+                            <td style="padding: 15px; color: #666;">@Model.Product.Color</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div id="reviews" class="tab-content">
+                <div class="description-content">
+                    @if (Model.Product.Reviews.Any())
+                    {
+                        <ul>
+                            @foreach (var review in Model.Product.Reviews)
+                            {
+                                <li><strong>@review.Rating/5</strong>: @review.Comment</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p style="text-align: center; padding: 40px 0; color: #999;">No reviews yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="related-products">
+            <h2>Related Products</h2>
+            <div class="related-grid">
+                @foreach (var related in Model.RelatedProducts)
+                {
+                    <a href="@Url.Action("Detail", "Product", new { id = related.Id })" class="product-card">
+                        <div class="product-card-image">
+                            @if (related.DiscountPrice.HasValue)
+                            {
+                                <span class="sale-badge">SALE</span>
+                            }
+                            <img src="@related.ImageUrl" alt="@related.Name">
+                        </div>
+                        <div class="product-card-title">@related.Name</div>
+                        <div class="product-card-price">
+                            @if (related.DiscountPrice.HasValue)
+                            {
+                                <del>@related.Price.ToString("#,##0") VND</del>
+                                <span>@related.DiscountPrice.Value.ToString("#,##0") VND</span>
+                            }
+                            else
+                            {
+                                <span>@related.Price.ToString("#,##0") VND</span>
+                            }
+                        </div>
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script src="~/js/detail-product.js"></script>
+    <script src="~/js/cart.js"></script>
+}
