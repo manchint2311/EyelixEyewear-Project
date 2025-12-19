@@ -1,4 +1,6 @@
-﻿namespace EyelixEyewear_Project.Models.ViewModels
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace EyelixEyewear_Project.Models.ViewModels
 {
     // Dashboard ViewModel
     public class AdminDashboardViewModel
@@ -43,5 +45,49 @@
         public string Location { get; set; }
         public int TotalOrders { get; set; }
         public decimal TotalSpent { get; set; }
+    }
+
+    // Product Form ViewModel (Cho Add/Edit)
+    public class ProductFormViewModel
+    {
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "Product name is required")]
+        [MaxLength(200)]
+        public string Name { get; set; }
+
+        [Required(ErrorMessage = "SKU is required")]
+        public string SKU { get; set; }
+
+        public string Description { get; set; }
+
+        [Required(ErrorMessage = "Price is required")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0")]
+        public decimal Price { get; set; }
+
+        public decimal? DiscountPrice { get; set; }
+
+        [Required(ErrorMessage = "Stock is required")]
+        [Range(0, int.MaxValue, ErrorMessage = "Stock cannot be negative")]
+        public int Stock { get; set; }
+
+        public string ImageUrl { get; set; }
+
+        // ← THÊM FIELD NÀY CHO UPLOAD
+        public IFormFile ImageFile { get; set; }
+
+        public string FrameMaterial { get; set; }
+        public string LensMaterial { get; set; }
+        public string FrameShape { get; set; }
+        public string Gender { get; set; }
+        public string Color { get; set; }
+
+        [Required(ErrorMessage = "Category is required")]
+        public int CategoryId { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        // For dropdown
+        public List<Category> Categories { get; set; } = new List<Category>();
     }
 }

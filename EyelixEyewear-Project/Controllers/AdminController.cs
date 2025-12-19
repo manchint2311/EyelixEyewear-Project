@@ -1,11 +1,17 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using EyelixEyewear_Project.Data;
+﻿using EyelixEyewear_Project.Data;
+using EyelixEyewear_Project.Helpers;
 using EyelixEyewear_Project.Models;
 using EyelixEyewear_Project.Models.ViewModels;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace EyelixEyewear_Project.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -16,39 +22,42 @@ namespace EyelixEyewear_Project.Controllers
         }
 
         // ==========================================
-        // HELPER: Kiểm tra Admin đã đăng nhập chưa
-        // ==========================================
-        private bool IsAdminLoggedIn()
-        {
-            var isLoggedIn = HttpContext.Session.GetString("AdminLoggedIn");
-            return isLoggedIn == "true";
-        }
-
-        // ==========================================
         // 0. LOGIN PAGE (Trang đăng nhập Admin)
         // ==========================================
         [HttpGet]
+        [AllowAnonymous] // Cho phép chưa đăng nhập được vào trang này
         public IActionResult Login()
         {
-            // Nếu đã đăng nhập rồi → Redirect vào Dashboard
-            if (IsAdminLoggedIn())
+            if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
             {
                 return RedirectToAction("Index");
             }
-
             return View();
         }
 
         [HttpPost]
-        public IActionResult Login(string username, string password)
+        [AllowAnonymous]
+        public async Task<IActionResult> Login(string username, string password)
         {
-            // Kiểm tra credentials (demo đơn giản)
-            // TODO: Thay bằng check database với Role = "Admin"
-            if (username == "admin" && password == "admin123")
+            // Kiểm tra User trong DB thay vì Hardcode
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+
+            // Logic check password (giống bên AccountController)
+            if (user != null && PasswordHelper.VerifyPassword(password, user.PasswordHash))
             {
-                // Lưu session
-                HttpContext.Session.SetString("AdminLoggedIn", "true");
-                HttpContext.Session.SetString("AdminUsername", username);
+                if (user.Role != "Admin") // Quan trọng: Kiểm tra Role
+                {
+                    return Json(new { success = false, message = "Bạn không có quyền Admin" });
+                }
+
+                // Tạo Cookie (Giống hệt AccountController)
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.Role, user.Role) // Lưu Role Admin vào Cookie
+                };
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
 
                 return Json(new { success = true, message = "Login successful" });
             }
@@ -57,24 +66,26 @@ namespace EyelixEyewear_Project.Controllers
         }
 
         // ==========================================
-        // LOGOUT
+        // LOGOUT (Đã sửa lỗi)
         // ==========================================
-        public IActionResult Logout()
+        [HttpGet] // Thêm HttpGet cho rõ ràng
+        public async Task<IActionResult> Logout() // Phải đổi thành async Task
         {
+            // 1. Quan trọng nhất: Xóa Cookie xác thực
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            // 2. Xóa Session (dọn dẹp cho sạch sẽ)
             HttpContext.Session.Clear();
+
+            // 3. Chuyển hướng về trang đăng nhập
             return RedirectToAction("Login");
         }
-
 
         // ==========================================
         // 1. DASHBOARD (Trang chủ Admin)
         // ==========================================
         public IActionResult Index()
         {
-            if (!IsAdminLoggedIn())  // ← Check Session thay vì [Authorize]
-            {
-                return RedirectToAction("Login");
-            }
             // Tính toán statistics
             var totalOrders = _context.Orders.Count();
             var totalSales = _context.Orders.Sum(o => o.TotalAmount);
@@ -91,7 +102,7 @@ namespace EyelixEyewear_Project.Controllers
 
             return View(model);
         }
-
+                  
         // ==========================================
         // 2. ORDERS MANAGEMENT
         // ==========================================
@@ -186,7 +197,7 @@ namespace EyelixEyewear_Project.Controllers
                     ImageUrl = p.ImageUrl
                 })
                 .ToList();
-
+            ViewBag.Categories = _context.Categories.Where(c => c.IsActive).ToList();
             return View(products);
         }
 
@@ -209,5 +220,294 @@ namespace EyelixEyewear_Project.Controllers
 
             return View(customers);
         }
+
+        // ==========================================
+        // 7. GET PRODUCT (For Edit Modal)
+        // ==========================================
+        [HttpGet]
+        public IActionResult GetProduct(int id)
+        {
+            var product = _context.Products.Find(id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            return Json(new
+            {
+                id = product.Id,
+                name = product.Name,
+                sku = product.SKU,
+                description = product.Description,
+                price = product.Price,
+                discountPrice = product.DiscountPrice,
+                stock = product.Stock,
+                imageUrl = product.ImageUrl,
+                frameMaterial = product.FrameMaterial,
+                lensMaterial = product.LensMaterial,
+                frameShape = product.FrameShape,
+                gender = product.Gender,
+                color = product.Color,
+                categoryId = product.CategoryId,
+                isActive = product.IsActive
+            });
+        }
+
+        // ==========================================
+        // 8. ADD PRODUCT (AJAX - JSON)
+        // ==========================================
+        [HttpPost]
+        public IActionResult AddProduct([FromBody] ProductFormViewModel model)
+        {
+            try
+            {
+                // Check SKU duplicate
+                if (_context.Products.Any(p => p.SKU == model.SKU))
+                {
+                    return Json(new { success = false, message = "SKU already exists" });
+                }
+
+                var product = new Product
+                {
+                    Name = model.Name,
+                    SKU = model.SKU,
+                    Description = model.Description,
+                    Price = model.Price,
+                    DiscountPrice = model.DiscountPrice,
+                    Stock = model.Stock,
+                    ImageUrl = model.ImageUrl,
+                    FrameMaterial = model.FrameMaterial,
+                    LensMaterial = model.LensMaterial,
+                    FrameShape = model.FrameShape,
+                    Gender = model.Gender,
+                    Color = model.Color,
+                    CategoryId = model.CategoryId,
+                    IsActive = model.IsActive,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.Products.Add(product);
+                _context.SaveChanges();
+
+                return Json(new { success = true, message = "Product added successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
+        }
+
+        // ==========================================
+        // 9. EDIT PRODUCT (AJAX - JSON)
+        // ==========================================
+        [HttpPost]
+        public IActionResult EditProduct([FromBody] ProductFormViewModel model)
+        {
+            try
+            {
+                var product = _context.Products.Find(model.Id);
+                if (product == null)
+                {
+                    return Json(new { success = false, message = "Product not found" });
+                }
+
+                // Check SKU duplicate (exclude current product)
+                if (_context.Products.Any(p => p.SKU == model.SKU && p.Id != model.Id))
+                {
+                    return Json(new { success = false, message = "SKU already exists" });
+                }
+
+                product.Name = model.Name;
+                product.SKU = model.SKU;
+                product.Description = model.Description;
+                product.Price = model.Price;
+                product.DiscountPrice = model.DiscountPrice;
+                product.Stock = model.Stock;
+                product.ImageUrl = model.ImageUrl;
+                product.FrameMaterial = model.FrameMaterial;
+                product.LensMaterial = model.LensMaterial;
+                product.FrameShape = model.FrameShape;
+                product.Gender = model.Gender;
+                product.Color = model.Color;
+                product.CategoryId = model.CategoryId;
+                product.IsActive = model.IsActive;
+                product.UpdatedAt = DateTime.UtcNow;
+
+                _context.SaveChanges();
+
+                return Json(new { success = true, message = "Product updated successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
+        }
+
+        // ==========================================
+        // 11. TOGGLE PRODUCT ACTIVE/INACTIVE
+        // ==========================================
+        [HttpPost]
+        public IActionResult ToggleProductStatus(int id)
+        {
+            var product = _context.Products.Find(id);
+            if (product == null)
+            {
+                return Json(new { success = false, message = "Product not found" });
+            }
+
+            product.IsActive = !product.IsActive;
+            product.UpdatedAt = DateTime.UtcNow;
+            _context.SaveChanges();
+
+            string status = product.IsActive ? "activated" : "deactivated";
+            return Json(new { success = true, message = $"Product {status} successfully", isActive = product.IsActive });
+        }
+
+        // ==========================================
+        // 12. DELETE PRODUCT
+        // ==========================================
+        [HttpPost]
+        public IActionResult DeleteProduct(int id)
+        {
+            var product = _context.Products
+                .Include(p => p.CartItems)
+                .Include(p => p.OrderDetails)
+                .FirstOrDefault(p => p.Id == id);
+
+            if (product == null)
+            {
+                return Json(new { success = false, message = "Product not found" });
+            }
+
+            // Check if product has orders
+            if (product.OrderDetails.Any())
+            {
+                return Json(new { success = false, message = "Cannot delete product with existing orders. Please deactivate instead." });
+            }
+
+            // Remove from carts first
+            if (product.CartItems.Any())
+            {
+                _context.CartItems.RemoveRange(product.CartItems);
+            }
+
+            _context.Products.Remove(product);
+            _context.SaveChanges();
+
+            return Json(new { success = true, message = "Product deleted successfully" });
+        }
+
+        // ==========================================
+        // 13. FILTER/SEARCH ORDERS
+        // ==========================================
+        [HttpGet]
+        public IActionResult FilterOrders(string search, string status, string payment, DateTime? fromDate, DateTime? toDate)
+        {
+            var query = _context.Orders.AsQueryable();
+
+            // Search by Order Number or Customer Name
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(o => o.OrderNumber.Contains(search) || o.ShippingName.Contains(search));
+            }
+
+            // Filter by Status
+            if (!string.IsNullOrEmpty(status) && status != "All")
+            {
+                query = query.Where(o => o.Status == status);
+            }
+
+            // Filter by Payment Method
+            if (!string.IsNullOrEmpty(payment) && payment != "All")
+            {
+                query = query.Where(o => o.PaymentMethod == payment);
+            }
+
+            // Filter by Date Range
+            if (fromDate.HasValue)
+            {
+                query = query.Where(o => o.OrderDate >= fromDate.Value);
+            }
+
+            if (toDate.HasValue)
+            {
+                query = query.Where(o => o.OrderDate <= toDate.Value.AddDays(1));
+            }
+
+            var orders = query.OrderByDescending(o => o.OrderDate)
+                .Select(o => new AdminOrderViewModel
+                {
+                    Id = o.Id,
+                    OrderNumber = o.OrderNumber,
+                    CustomerName = o.ShippingName,
+                    OrderDate = o.OrderDate,
+                    Status = o.Status,
+                    TotalAmount = o.TotalAmount,
+                    PaymentMethod = o.PaymentMethod
+                })
+                .ToList();
+
+            return Json(orders);
+        }
+
+        // ==========================================
+        // UPLOAD IMAGE
+        // ==========================================
+        [HttpPost]
+        public async Task<IActionResult> UploadProductImage(IFormFile file)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                {
+                    return Json(new { success = false, message = "No file selected" });
+                }
+
+                // Kiểm tra loại file
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+                if (!allowedExtensions.Contains(extension))
+                {
+                    return Json(new { success = false, message = "Only image files are allowed (jpg, png, gif, webp)" });
+                }
+
+                // Kiểm tra kích thước file (max 5MB)
+                if (file.Length > 5 * 1024 * 1024)
+                {
+                    return Json(new { success = false, message = "File size must be less than 5MB" });
+                }
+
+                // Tạo tên file unique
+                var fileName = $"{Guid.NewGuid()}{extension}";
+
+                // Đường dẫn lưu file
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "products");
+
+                // Tạo folder nếu chưa có
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                // Lưu file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // Trả về URL
+                var imageUrl = $"/images/products/{fileName}";
+
+                return Json(new { success = true, imageUrl = imageUrl });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error uploading file: " + ex.Message });
+            }
+        }
     }
+
 }

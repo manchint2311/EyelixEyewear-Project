@@ -1,18 +1,54 @@
 ﻿@model IEnumerable<EyelixEyewear_Project.Models.Product>
 
 @{
-    ViewData["Title"] = "Glasses Collection";
+    ViewData["Title"] = ViewBag.CurrentCategory != null
+        ? ViewBag.CurrentCategory + " Collection"
+        : "All Products";
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/products.css">
 }
 
+@{
+//Xác định ảnh banner và nội dung dựa vào category
+
+    string bannerImage = "/images/banner/jaehyun.jpg"; // Default
+    string pageTitle = "All Products";
+    string pageSubtitle = "Discover our complete sustainable and stylish eyewear collection";
+
+    if (ViewBag.CurrentCategory != null)
+    {
+        var category = ViewBag.CurrentCategory.ToString().ToLower();
+
+        if (category == "glasses")
+        {
+            bannerImage = "/images/banner/glasses-banner.jpg";
+            pageTitle = "Glasses Collection";
+            pageSubtitle = "Optical glasses for everyday style and comfort";
+        }
+        else if (category == "sunglasses")
+        {
+            bannerImage = "/images/banner/sunglasses-banner.jpg";
+            pageTitle = "Sunglasses Collection";
+            pageSubtitle = "Premium sunglasses for sun protection and fashion";
+        }
+    }
+    else
+    {
+        // All Products
+        bannerImage = "/images/banner/jaehyun.jpg";
+        pageTitle = "All Products";
+        pageSubtitle = "Discover our complete sustainable and stylish eyewear collection";
+    }
+}
+
 <div class="hero-banner">
-    <img src="~/images/banner/jaehyun.jpg" alt="Glasses Collection Banner" class="hero-banner-image">
+    <img src="@bannerImage" alt="@pageTitle Banner" class="hero-banner-image"
+         onerror="this.src='/images/banner/default-banner.jpg'">
     <div class="page-title">
-        <h1>Glasses Collection</h1>
-        <p>Discover our sustainable and stylish eyewear collection</p>
+        <h1>@pageTitle</h1>
+        <p>@pageSubtitle</p>
     </div>
 </div>
 

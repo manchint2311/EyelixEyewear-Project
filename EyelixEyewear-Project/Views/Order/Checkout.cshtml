@@ -11,15 +11,6 @@
 <div class="checkout-title-wrapper">
     <h1 class="checkout-title">Checkout</h1>
 </div>
-
-<!-- ALERT -->
-<div class="cart-alert-wrapper">
-    <div class="cart-alert">
-        <span class="star-icon">⭐</span>
-        Complete your order and earn @Model.EyelixPoints Eyelix points & rewards for a discount on a future purchase
-    </div>
-</div>
-
 <!-- CHECKOUT CONTENT -->
 <main class="checkout-page">
     <div class="checkout-layout">
@@ -102,61 +93,6 @@
                     @Html.CheckBoxFor(m => m.SubscribeEmail)
                     I would like to receive exclusive emails with discounts and product information
                 </label>
-            </div>
-
-            <div class="form-group checkbox-group">
-                <label>
-                    @Html.CheckBoxFor(m => m.DifferentShippingAddress, new { id = "different-address" })
-                    <strong>Ship to a different address?</strong>
-                </label>
-            </div>
-
-            <div id="shipping-address" style="display: none;">
-                <div class="form-row">
-                    <div class="form-group">
-                        @Html.LabelFor(m => m.RecipientFullName)
-                        <span class="required">*</span>
-                        @Html.TextBoxFor(m => m.RecipientFullName, new {
-                                                @class = "form-control",
-                                                placeholder = "Enter recipient's full name"
-                                                })
-                    </div>
-                    <div class="form-group">
-                        @Html.LabelFor(m => m.RecipientPhone)
-                        @Html.TextBoxFor(m => m.RecipientPhone, new {
-                                                @class = "form-control",
-                                                placeholder = "Enter recipient's phone"
-                                                })
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        @Html.LabelFor(m => m.ShippingProvince)
-                        <span class="required">*</span>
-                        @Html.TextBoxFor(m => m.ShippingProvince, new {
-                                                @class = "form-control",
-                                                placeholder = "Enter province/city"
-                                                })
-                    </div>
-                    <div class="form-group">
-                        @Html.LabelFor(m => m.ShippingWard)
-                        <span class="required">*</span>
-                        @Html.TextBoxFor(m => m.ShippingWard, new {
-                                                @class = "form-control",
-                                                placeholder = "Enter ward/commune"
-                                                })
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    @Html.LabelFor(m => m.ShippingAddress)
-                    <span class="required">*</span>
-                    @Html.TextBoxFor(m => m.ShippingAddress, new {
-                                        @class = "form-control",
-                                        placeholder = "Enter recipient's street address"
-                                        })
-                </div>
             </div>
 
             <div class="form-group">

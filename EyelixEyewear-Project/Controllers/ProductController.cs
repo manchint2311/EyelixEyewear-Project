@@ -16,15 +16,29 @@ namespace EyelixEyewear_Project.Controllers
         }
 
         // GET: /Product
-        // Trang danh sách sản phẩm
-        public async Task<IActionResult> Index()
+        // GET: /Product?category=glasses
+        // GET: /Product?category=sunglasses
+        public async Task<IActionResult> Index(string category)
         {
-            // Lấy tất cả sản phẩm đang active, bao gồm thông tin Category
-            var products = await _context.Products
+            // Lấy tất cả sản phẩm đang active
+            var query = _context.Products
                 .Include(p => p.Category)
-                .Where(p => p.IsActive)
+                .Include(p => p.Reviews)
+                .Include(p => p.ProductVariants)
+                .Where(p => p.IsActive);
+
+            // Filter theo category nếu có
+            if (!string.IsNullOrEmpty(category))
+            {
+                query = query.Where(p => p.Category.Name.ToLower() == category.ToLower());
+            }
+
+            var products = await query
                 .OrderByDescending(p => p.CreatedAt) // Mới nhất lên đầu
                 .ToListAsync();
+
+            // Truyền category vào ViewBag để hiển thị title
+            ViewBag.CurrentCategory = category;
 
             return View(products);
         }

@@ -32,7 +32,7 @@ namespace EyelixEyewear_Project.Models.ViewModels
         public string? ShippingWard { get; set; }
 
         // Thông tin đơn hàng
-        public string OrderNotes { get; set; }
+        public string? OrderNotes { get; set; }
         public string PaymentMethod { get; set; } = "COD"; // COD, Momo, Credit
         public string ShippingMethod { get; set; } = "standard";
 
