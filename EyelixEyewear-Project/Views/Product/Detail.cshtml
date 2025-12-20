@@ -77,16 +77,13 @@
                         <button type="button" class="quantity-btn" onclick="increaseQuantity()">+</button>
                     </div>
 
-                    <form asp-controller="Order" asp-action="AddToCart" method="post" style="display:inline;">
-                        <input type="hidden" name="productId" value="@Model.Product.Id" /> <input type="hidden" name="quantity" value="1" />
-                        <button class="btn-add-cart" onclick="addToCartAjax(@Model.Product.Id)">
+                    <form asp-controller="Order" asp-action="AddToCart" method="post">
+                        <input type="hidden" name="productId" value="@Model.Product.Id" />
+                        <input type="hidden" name="quantity" value="1" />
+                        <button class="btn-add-cart">
                             Add to cart
                         </button>
                     </form>
-
-                    <button type="button" class="wishlist-btn" onclick="toggleWishlist(this)">
-                        <i class="far fa-heart"></i>
-                    </button>
                 </div>
 
                 <div class="shipping-info">
@@ -95,7 +92,7 @@
                         <tbody>
                             <tr>
                                 <td>Nationwide</td>
-                                <td>Standard Shipping – 30.000 VND</td>
+                                <td>Standard Shipping – 20.000 VND</td>
                             </tr>
                         </tbody>
                     </table>
@@ -136,23 +133,129 @@
             </div>
 
             <div id="reviews" class="tab-content">
-                <div class="description-content">
+                <div class="reviews-wrapper">
+
+                    <!-- Rating Summary -->
                     @if (Model.Product.Reviews.Any())
                     {
-                        <ul>
-                            @foreach (var review in Model.Product.Reviews)
+                        var avgRating = Model.Product.Reviews.Average(r => r.Rating);
+                        var reviewCount = Model.Product.Reviews.Count;
+
+                        <div class="rating-summary">
+                            <div class="rating-overview">
+                                <div class="average-rating-number">@avgRating.ToString("F1")</div>
+                                <div class="stars-display">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= Math.Floor(avgRating))
+                                        {
+                                            <i class="fas fa-star"></i>
+                                        }
+                                        else if (i == Math.Ceiling(avgRating) && avgRating % 1 != 0)
+                                        {
+                                            <i class="fas fa-star-half-alt"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="far fa-star"></i>
+                                        }
+                                    }
+                                </div>
+                                <div class="review-count-text">Based on @reviewCount review@(reviewCount > 1 ? "s" : "")</div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Reviews List -->
+                    <div class="reviews-list">
+                        @if (Model.Product.Reviews.Any())
+                        {
+                            @foreach (var review in Model.Product.Reviews.OrderByDescending(r => r.CreatedAt))
                             {
-                                <li><strong>@review.Rating/5</strong>: @review.Comment</li>
+                                <div class="review-item">
+                                    <div class="review-header">
+                                        <div class="reviewer-info">
+                                            <div class="reviewer-avatar">
+                                                @review.User.FullName.Substring(0, 1).ToUpper()
+                                            </div>
+                                            <div>
+                                                <div class="reviewer-name">@review.User.FullName</div>
+                                                <div class="review-date">@review.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                            </div>
+                                        </div>
+                                        <div class="review-rating-stars">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (i <= review.Rating)
+                                                {
+                                                    <i class="fas fa-star"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="far fa-star"></i>
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="review-comment">@review.Comment</div>
+                                </div>
                             }
-                        </ul>
+                        }
+                        else
+                        {
+                            <div class="no-reviews">
+                                <i class="far fa-comment-dots"></i>
+                                <p>No reviews yet. Be the first to review this product!</p>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Submit Review Form -->
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <div class="submit-review-section" id="reviewFormSection">
+                            <h3>Write Your Review</h3>
+
+                            <form id="reviewForm">
+                                <input type="hidden" id="productId" value="@Model.Product.Id">
+                                <input type="hidden" id="selectedRating" value="0">
+
+                                <div class="form-group">
+                                    <label>Your Rating <span class="required">*</span></label>
+                                    <div class="star-rating-input">
+                                        <i class="far fa-star" data-rating="1"></i>
+                                        <i class="far fa-star" data-rating="2"></i>
+                                        <i class="far fa-star" data-rating="3"></i>
+                                        <i class="far fa-star" data-rating="4"></i>
+                                        <i class="far fa-star" data-rating="5"></i>
+                                    </div>
+                                    <span id="ratingError" class="error-message" style="display: none;">Please select a rating</span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Your Review <span class="required">*</span></label>
+                                    <textarea id="reviewComment"
+                                          rows="5"
+                                          placeholder="Share your experience with this product... (minimum 10 characters)"
+                                          maxlength="1000"></textarea>
+                                    <span id="commentError" class="error-message" style="display: none;">Review must be at least 10 characters</span>
+                                </div>
+
+                                <button type="submit" class="btn-submit-review">
+                                    <i class="fas fa-paper-plane"></i> Submit Review
+                                </button>
+                            </form>
+                        </div>
                     }
                     else
                     {
-                        <p style="text-align: center; padding: 40px 0; color: #999;">No reviews yet.</p>
+                        <div class="login-prompt">
+                            <i class="fas fa-lock"></i>
+                            <p>Please <a href="@Url.Action("Login", "Account")" style="color: #f08438; font-weight: 600;">login</a> to write a review</p>
+                        </div>
                     }
                 </div>
             </div>
-        </div>
 
         <div class="related-products">
             <h2>Related Products</h2>
@@ -189,4 +292,5 @@
 @section Scripts {
     <script src="~/js/detail-product.js"></script>
     <script src="~/js/cart.js"></script>
+    <script src="~/js/review.js"></script>
 }

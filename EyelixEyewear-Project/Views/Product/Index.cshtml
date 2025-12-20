@@ -55,30 +55,138 @@
 <div class="container">
     <div class="product-content-wrapper">
 
+
         <aside class="sidebar product-sidebar">
+
+            @* ================= MATERIAL FILTER ================= *@
             <div class="filter-section-sidebar">
                 <div class="filter-header" onclick="toggleFilterSection(this)">
                     <span>Material</span>
                     <span class="toggle-icon">▲</span>
                 </div>
+
                 <ul class="filter-content filter-list">
-                    <li class="filter-option" data-filter-type="material" data-value="Acetate">Acetate</li>
-                    <li class="filter-option" data-filter-type="material" data-value="Metal">Metal</li>
+                    @{
+                        var materials = Model
+                        .Where(p => !string.IsNullOrEmpty(p.FrameMaterial))
+                        .Select(p => p.FrameMaterial)
+                        .Distinct()
+                        .OrderBy(m => m)
+                        .ToList();
+                    }
+
+                    @foreach (var material in materials)
+                    {
+                        <li class="filter-option"
+                            data-filter-type="material"
+                            data-value="@material"
+                            onclick="toggleFilter(this)">
+                            <span class="filter-checkbox">☐</span>
+                            @material
+                        </li>
+                    }
                 </ul>
             </div>
 
+            @* ================= FRAME SHAPE FILTER ================= *@
+            <div class="filter-section-sidebar">
+                <div class="filter-header" onclick="toggleFilterSection(this)">
+                    <span>Frame Shape</span>
+                    <span class="toggle-icon">▲</span>
+                </div>
+
+                <ul class="filter-content filter-list">
+                    @{
+                        var shapes = Model
+                        .Where(p => !string.IsNullOrEmpty(p.FrameShape))
+                        .Select(p => p.FrameShape)
+                        .Distinct()
+                        .OrderBy(s => s)
+                        .ToList();
+                    }
+
+                    @foreach (var shape in shapes)
+                    {
+                        <li class="filter-option"
+                            data-filter-type="shape"
+                            data-value="@shape"
+                            onclick="toggleFilter(this)">
+                            <span class="filter-checkbox">☐</span>
+                            @shape
+                        </li>
+                    }
+                </ul>
+            </div>
+
+            @* ================= GENDER FILTER ================= *@
+            <div class="filter-section-sidebar">
+                <div class="filter-header" onclick="toggleFilterSection(this)">
+                    <span>Gender</span>
+                    <span class="toggle-icon">▲</span>
+                </div>
+
+                <ul class="filter-content filter-list">
+                    @{
+                        var genders = Model
+                        .Where(p => !string.IsNullOrEmpty(p.Gender))
+                        .Select(p => p.Gender)
+                        .Distinct()
+                        .OrderBy(g => g)
+                        .ToList();
+                    }
+
+                    @foreach (var gender in genders)
+                    {
+                        <li class="filter-option"
+                            data-filter-type="gender"
+                            data-value="@gender"
+                            onclick="toggleFilter(this)">
+                            <span class="filter-checkbox">☐</span>
+                            @gender
+                        </li>
+                    }
+                </ul>
+            </div>
+
+            @* ================= COLOR FILTER ================= *@
             <div class="filter-section-sidebar">
                 <div class="filter-header" onclick="toggleFilterSection(this)">
                     <span>Color</span>
                     <span class="toggle-icon">▲</span>
                 </div>
-                <ul class="filter-content filter-color-list">
-                    <li class="color-filter-option" data-filter-type="color" data-value="black"><div class="color-swatch black"></div><span class="filter-option-label">Black</span></li>
-                    <li class="color-filter-option" data-filter-type="color" data-value="tortoise"><div class="color-swatch tortoise"></div><span class="filter-option-label">Tortoise</span></li>
-                    <li class="color-filter-option" data-filter-type="color" data-value="gold"><div class="color-swatch gold"></div><span class="filter-option-label">Gold</span></li>
+
+                <ul class="filter-content filter-list">
+                    @{
+                        var colors = Model
+                        .Where(p => !string.IsNullOrEmpty(p.Color))
+                        .Select(p => p.Color)
+                        .Distinct()
+                        .OrderBy(c => c)
+                        .ToList();
+                    }
+
+                    @foreach (var color in colors)
+                    {
+                        <li class="filter-option"
+                            data-filter-type="color"
+                            data-value="@color"
+                            onclick="toggleFilter(this)">
+                            <span class="filter-checkbox">☐</span>
+                            @color
+                        </li>
+                    }
                 </ul>
             </div>
+
+            @* ================= RESET FILTER BUTTON ================= *@
+            <div class="filter-reset-wrapper">
+                <button class="btn-reset-filters" onclick="resetAllFilters()">
+                    Reset All Filters
+                </button>
+            </div>
+
         </aside>
+
 
         <main class="product-main-content">
             <div class="filter-section">
@@ -102,9 +210,24 @@
                     foreach (var item in Model)
                     {
                         // --- LOGIC TÍNH TOÁN HIỂN THỊ ---
-                        // 1. Tính rating trung bình
-                        double rating = item.Reviews != null && item.Reviews.Any() ? item.Reviews.Average(r => r.Rating) : 5;
-                        int reviewCount = item.Reviews?.Count ?? 0;
+                        // === TÍNH RATING ĐỘNG TỪ DATABASE ===
+                        double avgRating = 0;
+                        int totalReviews = 0;
+
+                        if (item.Reviews != null && item.Reviews.Any())
+                        {
+                            // Chỉ lấy reviews đã được approve
+                            var approvedReviews = item.Reviews.Where(r => r.IsApproved).ToList();
+
+                            if (approvedReviews.Any())
+                            {
+                                avgRating = approvedReviews.Average(r => r.Rating);
+                                totalReviews = approvedReviews.Count;
+                            }
+                        }
+
+                        // Làm tròn rating về 0.5 (4.3 -> 4.5, 4.7 -> 5.0)
+                        double displayRating = Math.Round(avgRating * 2) / 2;
 
                         // 2. Xác định Badge (New/Sale)
                         string badgeClass = "";
@@ -112,18 +235,17 @@
                         if (item.DiscountPrice.HasValue) { badgeClass = "sale"; badgeText = "Sale"; }
                         else if (item.CreatedAt > DateTime.Now.AddDays(-30)) { badgeClass = "new"; badgeText = "New"; }
 
-                        // 3. Tạo chuỗi filter cho JS đọc (ví dụ: "all sale bestseller")
-                        string filterData = "all";
-                        if (!string.IsNullOrEmpty(badgeClass)) { filterData += " " + badgeClass; }
-                        // Giả lập logic bestseller: nếu bán > 10 (cần thêm trường Sold trong DB nếu muốn chính xác)
-                        if (reviewCount > 5) { filterData += " bestseller"; }
 
                         // --- BẮT ĐẦU RENDER HTML ---
-                        // Thay vì thẻ <a> bao trùm, dùng <div> class="product-item" để chứa các nút bấm
                         <div class="product-item"
                              data-price="@((int)item.Price)"
                              data-product-id="@item.Id"
-                             data-filter="@filterData">
+                             data-material="@(item.FrameMaterial ?? "")"
+                             data-shape="@(item.FrameShape ?? "")"
+                             data-gender="@(item.Gender ?? "")"
+                             data-color="@(item.Color ?? "")"
+                             data-rating="@avgRating.ToString("0.0")">
+                            >
 
                             <div class="product-image">
                                 <a href="@Url.Action("Detail", "Product", new { id = item.Id })" title="@item.Name">
@@ -166,23 +288,36 @@
                                     <div class="star">
                                         @for (int i = 1; i <= 5; i++)
                                         {
-                                            if (i <= Math.Floor(rating))
+                                            if (i <= Math.Floor(displayRating))
                                             {
+                                                @* Sao đầy màu vàng *@
                                                 <i class="fas fa-star"></i>
                                             }
-                                            else if (i == Math.Ceiling(rating) && rating % 1 != 0)
+                                            else if (i == Math.Ceiling(displayRating) && displayRating % 1 != 0)
                                             {
-
+                                                @* Sao nửa *@
                                                 <i class="fas fa-star-half-alt"></i>
                                             }
                                             else
                                             {
-
+                                                @* Sao rỗng màu xám *@
                                                 <i class="far fa-star"></i>
                                             }
                                         }
                                     </div>
-                                    <span class="rating-count">(@reviewCount)</span>
+
+                                    @if (totalReviews > 0)
+                                    {
+                                        <span class="rating-count" title="@avgRating.ToString("0.0") stars average">
+                                            (@totalReviews)
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="rating-count no-reviews">
+                                            (No reviews)
+                                        </span>
+                                    }
                                 </div>
 
                                 <div class="product-price @(item.DiscountPrice.HasValue ? "sale" : "")">
@@ -198,13 +333,13 @@
                                 </div>
 
                                 <div class="product-actions">
-                                    <form asp-controller="Order" asp-action="AddToCart" method="post" style="display:inline;">
-                                        <input type="hidden" name="productId" value="@item.Id" /> <input type="hidden" name="quantity" value="1" />
+                                    <form asp-controller="Order" asp-action="AddToCart" method="post">
+                                        <input type="hidden" name="productId" value="@item.Id" />
+                                        <input type="hidden" name="quantity" value="1" />
                                         <button class="btn-add-cart" onclick="addToCartAjax(@item.Id)">
                                             Add to cart
                                         </button>
                                     </form>
-                                    <button class="btn-wishlist" onclick="toggleWishlist(this)">♡</button>
                                 </div>
 
                                 <div style="font-size: 12px; color: #687279; margin-top: 0.5rem;">

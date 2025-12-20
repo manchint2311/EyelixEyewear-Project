@@ -59,7 +59,6 @@
                                     <a asp-controller="Product" asp-action="Detail" asp-route-id="@product.Id">
                                         <img src="@product.ImageUrl" alt="@product.Name">
                                     </a>
-                                    <button class="wishlist-btn">♡</button>
                                 </div>
                                 <div class="product-info">
                                     <h3><a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id">@product.Name</a></h3>
@@ -189,9 +188,8 @@
 <!-- Carbon Negative Section -->
 <section class="carbon-negative" style="background-image: url('/images/blog/carbon-bg.jpg');">
     <div class="container">
-        <h2>Carbon Footprint Report</h2>
+        <h2>Carbon Footprint Negative</h2>
         <p>Our mission has led Eyelix Eyewear to become one of the very first carbon negative eyewear brands in Vietnam.</p>
-        <a asp-controller="Home" asp-action="OurMission" class="btn-secondary">find out more</a>
     </div>
 </section>
 

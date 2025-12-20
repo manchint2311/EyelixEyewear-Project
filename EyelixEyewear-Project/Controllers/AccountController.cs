@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using EyelixEyewear_Project.Data;
 using Microsoft.AspNetCore.Authorization;
-// SỬA LỖI: Đổi tên User Model thành AppUser để tránh trùng với User của Controller
 using AppUser = EyelixEyewear_Project.Models.User;
 using EyelixEyewear_Project.Models.ViewModels;
 using EyelixEyewear_Project.Helpers;
@@ -209,6 +208,116 @@ namespace EyelixEyewear_Project.Controllers
 
             TempData["ErrorMessage"] = "Vui lòng kiểm tra lại thông tin nhập vào.";
             return View("Profile", model);
+        }
+
+        // ================= FORGOT PASSWORD =================
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            if (User.Identity.IsAuthenticated) return RedirectToAction("Index", "Home");
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ForgotPassword(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                ModelState.AddModelError("", "Please enter your email address.");
+                return View();
+            }
+
+            // Tìm user theo email
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+            if (user == null)
+            {
+                ModelState.AddModelError("", "No account found with this email address.");
+                return View();
+            }
+
+            // Generate password tạm thời (6 ký tự random)
+            var tempPassword = GenerateRandomPassword(8);
+
+            // Hash và lưu vào DB
+            user.PasswordHash = PasswordHelper.HashPassword(tempPassword);
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            // Hiển thị password tạm cho user (trong thực tế nên gửi email)
+            ViewBag.TempPassword = tempPassword;
+            ViewBag.UserEmail = email;
+            ViewBag.Success = true;
+
+            return View("ForgotPasswordSuccess");
+        }
+
+        // Helper method để generate random password
+        private string GenerateRandomPassword(int length)
+        {
+            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        // Order Detail
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetOrderDetail(int orderId)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            // Lấy order với đầy đủ thông tin
+            var order = await _context.Orders
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(od => od.Product)
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
+
+            if (order == null)
+            {
+                return NotFound(new { success = false, message = "Order not found" });
+            }
+
+            // Chuẩn bị dữ liệu trả về
+            var orderDetail = new
+            {
+                success = true,
+                order = new
+                {
+                    orderNumber = order.OrderNumber,
+                    orderDate = order.OrderDate.ToString("dd/MM/yyyy HH:mm"),
+                    status = order.Status,
+                    paymentMethod = order.PaymentMethod,
+                    note = order.Note ?? "",
+
+                    // Thông tin giao hàng
+                    shippingName = order.ShippingName,
+                    shippingPhone = order.ShippingPhone,
+                    shippingAddress = order.ShippingAddress,
+                    shippingWard = order.ShippingWard,
+                    shippingDistrict = order.ShippingDistrict,
+                    shippingCity = order.ShippingCity,
+
+                    // Chi tiết sản phẩm
+                    items = order.OrderDetails.Select(od => new
+                    {
+                        productName = od.Product.Name,
+                        productImage = od.Product.ImageUrl ?? "/images/default-product.jpg",
+                        quantity = od.Quantity,
+                        price = od.Price,
+                        subtotal = od.Quantity * od.Price
+                    }).ToList(),
+
+                    // Tổng tiền
+                    subtotal = order.OrderDetails.Sum(od => od.Quantity * od.Price),
+                    shippingFee = order.ShippingFee,
+                    discount = order.Discount,
+                    totalAmount = order.TotalAmount
+                }
+            };
+
+            return Json(orderDetail);
         }
     }
 }

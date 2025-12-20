@@ -1,90 +1,220 @@
-﻿@* Views/Home/About.cshtml *@
-
-@{
-    ViewData["Title"] = "About Us";
+﻿@{
+    ViewData["Title"] = "About Us - Our Story";
 }
 
-<div class="hero-banner">
-    <img src="~/images/banner/about-banner.jpg" alt="About Eyelix" class="hero-banner-image">
-    <div class="page-title">
-        <h1>About Us</h1>
-        <p>Discover the story of Eyelix Eyewear</p>
-    </div>
-</div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/about.css">
+}
 
-<section class="about-content" style="padding: 80px 0;">
+<!-- Hero Section -->
+<section class="about-hero">
+    <div class="hero-content">
+        <h1>Our Story</h1>
+        <p class="hero-subtitle">Sustainable Eyewear for a Better Tomorrow</p>
+    </div>
+    <div class="hero-image">
+        <img src="~/images/about/hero-about.jpg" alt="Eyelix Eyewear Story">
+    </div>
+</section>
+
+<!-- Mission Section -->
+<section class="mission-section">
     <div class="container">
-        <div class="row">
-            <div class="col-lg-6">
-                <h2 style="font-size: 42px; margin-bottom: 30px; color: var(--primary-color);">Our Story</h2>
-                <p style="font-size: 16px; line-height: 1.8; color: #666; margin-bottom: 20px;">
-                    Eyelix was founded with a passion for creating eyewear products that are not only fashionable but also environmentally friendly. 
-                    We believe that style and responsibility can go hand in hand.
+        <div class="section-header">
+            <span class="label">OUR MISSION</span>
+            <h2>Creating Eyewear That Doesn't Cost the Earth</h2>
+        </div>
+
+        <div class="mission-content">
+            <div class="mission-text">
+                <p>
+                    Founded in 2020, Eyelix Eyewear was born from a simple belief:
+                    style and sustainability shouldn't be mutually exclusive. We set out
+                    to create eyewear that not only looks good but does good for our planet.
                 </p>
-                <p style="font-size: 16px; line-height: 1.8; color: #666; margin-bottom: 20px;">
-                    From the early days, we have been committed to using recycled materials and carbon-negative production processes. 
-                    Each Eyelix product is handcrafted with meticulous attention to every detail.
+                <p>
+                    Every pair of Eyelix glasses is crafted from eco-friendly materials,
+                    including recycled acetate, bio-based plastics, and reclaimed metals.
+                    We're committed to reducing waste, minimizing our carbon footprint,
+                    and supporting ethical manufacturing practices.
                 </p>
-                <a asp-controller="Home" asp-action="OurMission" class="btn-primary" style="margin-top: 20px;">Learn About Our Mission</a>
             </div>
-            <div class="col-lg-6">
-                <img src="~/images/about/our-story.jpg" alt="Our Story" style="width: 100%; border-radius: 8px;">
+            <div class="mission-image">
+                <img src="~/images/about/mission.jpg" alt="Our Mission">
             </div>
         </div>
     </div>
 </section>
 
-<section style="background: var(--bg-light); padding: 80px 0;">
+<!-- Values Section -->
+<section class="values-section">
     <div class="container">
-        <div class="row text-center">
-            <div class="col-md-4 mb-4">
-                <div style="padding: 30px;">
-                    <i class="fas fa-leaf" style="font-size: 48px; color: var(--primary-color); margin-bottom: 20px;"></i>
-                    <h3 style="font-size: 24px; margin-bottom: 15px;">Sustainable</h3>
-                    <p style="color: #666;">Using 95% recycled materials in production</p>
+        <div class="section-header">
+            <span class="label">OUR VALUES</span>
+            <h2>What We Stand For</h2>
+        </div>
+
+        <div class="values-grid">
+            <div class="value-card">
+                <div class="value-icon">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <h3>Sustainability</h3>
+                <p>
+                    We use eco-friendly materials and carbon-neutral shipping
+                    to minimize our environmental impact.
+                </p>
+            </div>
+
+            <div class="value-card">
+                <div class="value-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <h3>Quality</h3>
+                <p>
+                    Each frame is meticulously crafted to ensure durability,
+                    comfort, and timeless style.
+                </p>
+            </div>
+
+            <div class="value-card">
+                <div class="value-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Community</h3>
+                <p>
+                    We partner with local artisans and support fair trade
+                    practices worldwide.
+                </p>
+            </div>
+
+            <div class="value-card">
+                <div class="value-icon">
+                    <i class="fas fa-recycle"></i>
+                </div>
+                <h3>Circularity</h3>
+                <p>
+                    Our frames are designed to be repaired, recycled, and
+                    given new life at the end of their journey.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Timeline Section -->
+<section class="timeline-section">
+    <div class="container">
+        <div class="section-header">
+            <span class="label">OUR JOURNEY</span>
+            <h2>The Eyelix Story</h2>
+        </div>
+
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-date">2020</div>
+                <div class="timeline-content">
+                    <h3>The Beginning</h3>
+                    <p>
+                        Eyelix Eyewear was founded with a vision to create sustainable,
+                        stylish eyewear for conscious consumers.
+                    </p>
                 </div>
             </div>
-            <div class="col-md-4 mb-4">
-                <div style="padding: 30px;">
-                    <i class="fas fa-hand-holding-heart" style="font-size: 48px; color: var(--primary-color); margin-bottom: 20px;"></i>
-                    <h3 style="font-size: 24px; margin-bottom: 15px;">Handcrafted</h3>
-                    <p style="color: #666;">Each product is meticulously handcrafted</p>
+
+            <div class="timeline-item">
+                <div class="timeline-date">2021</div>
+                <div class="timeline-content">
+                    <h3>First Collection Launch</h3>
+                    <p>
+                        We launched our debut collection featuring 12 eco-friendly frames
+                        made from recycled materials.
+                    </p>
                 </div>
             </div>
-            <div class="col-md-4 mb-4">
-                <div style="padding: 30px;">
-                    <i class="fas fa-star" style="font-size: 48px; color: var(--primary-color); margin-bottom: 20px;"></i>
-                    <h3 style="font-size: 24px; margin-bottom: 15px;">Quality</h3>
-                    <p style="color: #666;">Commitment to premium quality for every product</p>
+
+            <div class="timeline-item">
+                <div class="timeline-date">2022</div>
+                <div class="timeline-content">
+                    <h3>Carbon Negative Achievement</h3>
+                    <p>
+                        Became one of Vietnam's first carbon-negative eyewear brands
+                        through our offset programs.
+                    </p>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date">2023</div>
+                <div class="timeline-content">
+                    <h3>Global Expansion</h3>
+                    <p>
+                        Expanded to international markets while maintaining our
+                        commitment to sustainability.
+                    </p>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date">2024</div>
+                <div class="timeline-content">
+                    <h3>Innovation in Materials</h3>
+                    <p>
+                        Introduced our groundbreaking recycled aluminum collection,
+                        setting new standards in eco-design.
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<section style="padding: 80px 0;">
+<!-- Impact Section -->
+<section class="impact-section">
     <div class="container">
-        <h2 style="text-align: center; font-size: 42px; margin-bottom: 60px;">Our Team</h2>
-        <div class="row">
-            <div class="col-md-3 text-center mb-4">
-                <img src="~/images/team/member1.jpg" alt="Team Member" style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover; margin-bottom: 20px;">
-                <h4>John Smith</h4>
-                <p style="color: #666;">Chief Executive Officer</p>
+        <div class="section-header">
+            <span class="label">OUR IMPACT</span>
+            <h2>Making a Difference</h2>
+        </div>
+
+        <div class="impact-stats">
+            <div class="stat-card">
+                <div class="stat-number">10,000+</div>
+                <div class="stat-label">Trees Planted</div>
             </div>
-            <div class="col-md-3 text-center mb-4">
-                <img src="~/images/team/member2.jpg" alt="Team Member" style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover; margin-bottom: 20px;">
-                <h4>Jane Doe</h4>
-                <p style="color: #666;">Design Director</p>
+
+            <div class="stat-card">
+                <div class="stat-number">50 Tons</div>
+                <div class="stat-label">Plastic Recycled</div>
             </div>
-            <div class="col-md-3 text-center mb-4">
-                <img src="~/images/team/member3.jpg" alt="Team Member" style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover; margin-bottom: 20px;">
-                <h4>Mike Johnson</h4>
-                <p style="color: #666;">Production Manager</p>
+
+            <div class="stat-card">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Carbon Neutral</div>
             </div>
-            <div class="col-md-3 text-center mb-4">
-                <img src="~/images/team/member4.jpg" alt="Team Member" style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover; margin-bottom: 20px;">
-                <h4>Sarah Williams</h4>
-                <p style="color: #666;">Marketing Director</p>
+
+            <div class="stat-card">
+                <div class="stat-number">25,000+</div>
+                <div class="stat-label">Happy Customers</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Join Us on Our Journey</h2>
+            <p>Discover our collection of sustainable eyewear and be part of the change.</p>
+            <div class="cta-buttons">
+                <a asp-controller="Product" asp-action="Index" class="btn-primary">
+                    Shop Collection
+                </a>
+                <a asp-controller="Home" asp-action="Contact" class="btn-secondary">
+                    Get in Touch
+                </a>
             </div>
         </div>
     </div>

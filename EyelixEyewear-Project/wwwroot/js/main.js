@@ -168,57 +168,6 @@ function initProductSlider() {
 initProductSlider();
 
 // =====================================
-// WISHLIST FUNCTIONALITY
-// =====================================
-// Wishlist nên được lưu trên server, nhưng tạm thời dùng sessionStorage
-let wishlist = JSON.parse(sessionStorage.getItem('wishlist')) || [];
-
-function updateWishlistUI() {
-    const wishlistBtns = document.querySelectorAll('.wishlist-btn');
-
-    wishlistBtns.forEach(btn => {
-        const productId = btn.closest('.product-card')?.dataset.productId;
-        if (wishlist.includes(productId)) {
-            btn.innerHTML = '♥';
-            btn.style.color = '#e00d0d';
-        }
-    });
-}
-
-document.addEventListener('click', function (e) {
-    if (e.target.classList.contains('wishlist-btn')) {
-        const productCard = e.target.closest('.product-card');
-        const productId = productCard?.dataset.productId;
-        const productName = productCard?.querySelector('h3')?.textContent || 'Product';
-
-        if (!productId) return;
-
-        if (wishlist.includes(productId)) {
-            wishlist = wishlist.filter(id => id !== productId);
-            e.target.innerHTML = '♡';
-            e.target.style.color = '';
-            showNotification(`${productName} removed from wishlist`);
-        } else {
-            wishlist.push(productId);
-            e.target.innerHTML = '♥';
-            e.target.style.color = '#e00d0d';
-            showNotification(`${productName} added to wishlist`);
-        }
-
-        sessionStorage.setItem('wishlist', JSON.stringify(wishlist));
-
-        // TODO: Gửi request lên server để lưu wishlist vào database
-        // fetch('/Wishlist/Toggle', {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify({ productId: productId })
-        // });
-    }
-});
-
-updateWishlistUI();
-
-// =====================================
 // NOTIFICATION
 // =====================================
 function showNotification(message, type = 'success') {

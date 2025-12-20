@@ -49,14 +49,12 @@ namespace EyelixEyewear.Controllers
             return View();
         }
 
-        // GET: Home/OurStory
-        public IActionResult OurStory()
+        // GET: Home/Terms & Privacy
+        public IActionResult Terms()
         {
             return View();
         }
-
-        // GET: Home/OurMission
-        public IActionResult OurMission()
+        public IActionResult Privacy()
         {
             return View();
         }
@@ -99,18 +97,6 @@ namespace EyelixEyewear.Controllers
 
         // GET: Home/FAQ
         public IActionResult FAQ()
-        {
-            return View();
-        }
-
-        // GET: Home/Terms
-        public IActionResult Terms()
-        {
-            return View();
-        }
-
-        // GET: Home/Privacy
-        public IActionResult Privacy()
         {
             return View();
         }

@@ -157,57 +157,6 @@ function addToCart() {
 }
 
 // ==========================================
-// WISHLIST TOGGLE (Submit to Server)
-// ==========================================
-function toggleWishlist(btn) {
-    const productId = document.getElementById('product-id')?.value;
-
-    if (!productId) {
-        alert('Product not found!');
-        return;
-    }
-
-    const icon = btn.querySelector('i');
-    const isWishlisted = icon?.classList.contains('fas');
-
-    // Send to server
-    fetch('/Wishlist/Toggle', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ productId: productId })
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update UI based on response
-                if (icon) {
-                    if (data.isWishlisted) {
-                        icon.classList.remove('far');
-                        icon.classList.add('fas');
-                        btn.style.color = '#e00d0d';
-                        btn.style.borderColor = '#e00d0d';
-                        showNotification('Added to wishlist', 'success');
-                    } else {
-                        icon.classList.remove('fas');
-                        icon.classList.add('far');
-                        btn.style.color = '#666';
-                        btn.style.borderColor = '#ddd';
-                        showNotification('Removed from wishlist', 'success');
-                    }
-                }
-            } else {
-                showNotification(data.message || 'Failed to update wishlist', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('An error occurred. Please try again.', 'error');
-        });
-}
-
-// ==========================================
 // TAB SWITCHING (Description, Reviews, etc.)
 // ==========================================
 function openTab(evt, tabName) {

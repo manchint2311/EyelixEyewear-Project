@@ -20,11 +20,7 @@
                 </ul>
             </li>
             <li class="dropdown">
-                <a asp-controller="Home" asp-action="About">ABOUT</a>
-                <ul class="submenu">
-                    <li><a asp-controller="Home" asp-action="OurStory">OUR STORY</a></li>
-                    <li><a asp-controller="Home" asp-action="OurMission">OUR MISSION</a></li>
-                </ul>
+                <a asp-controller="Home" asp-action="About">ABOUT US</a>
             </li>
         </ul>
 
@@ -37,7 +33,7 @@
 
         <!-- Right Icons -->
         <div class="nav-right">
-            <button class="icon-btn search-btn" aria-label="Search" onclick="openSearch()">
+            <button class="icon-btn search-btn" aria-label="Search" onclick="openSearchModal()">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="11" cy="11" r="8" />
                     <path d="m21 21-4.35-4.35" />
@@ -48,7 +44,6 @@
             @if (User.Identity.IsAuthenticated)
             {
                 <a asp-controller="Account" asp-action="Profile" class="icon-btn account-btn" aria-label="Account">
-                    <!-- ↑ PHẢI LÀ "Account", KHÔNG PHẢI "Admin" -->
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                         <circle cx="12" cy="7" r="4" />
@@ -84,11 +79,29 @@
                         <circle cx="20" cy="21" r="1" />
                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                     </svg>
-                    <!-- KHÔNG hiện cart-count khi chưa đăng nhập -->
                 </a>
             }
-
-            <a asp-controller="Account" asp-action="Wishlist" class="btn-wishlist">WISHLIST</a>
         </div>
     </div>
 </nav>
+
+<!-- Search Modal -->
+<div id="searchModal" class="search-modal">
+    <div class="search-modal-content">
+        <button class="search-close" onclick="closeSearchModal()">&times;</button>
+
+        <div class="search-box">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input type="text"
+                   id="searchInput"
+                   class="search-input"
+                   placeholder="Search for products..."
+                   autocomplete="off">
+        </div>
+
+        <div id="searchResults" class="search-results"></div>
+    </div>
+</div>

@@ -14,46 +14,43 @@ namespace EyelixEyewear_Project.Controllers
         {
             _context = context;
         }
-
-        // GET: /Product
-        // GET: /Product?category=glasses
-        // GET: /Product?category=sunglasses
+        // ===================================================
+        // INCLUDE REVIEWS
+        // ===================================================
         public async Task<IActionResult> Index(string category)
         {
-            // Lấy tất cả sản phẩm đang active
+            // .Include(p => p.Reviews)
             var query = _context.Products
                 .Include(p => p.Category)
-                .Include(p => p.Reviews)
+                .Include(p => p.Reviews)  // ← THÊM DÒNG NÀY
                 .Include(p => p.ProductVariants)
                 .Where(p => p.IsActive);
 
-            // Filter theo category nếu có
+            // Filter theo category
             if (!string.IsNullOrEmpty(category))
             {
                 query = query.Where(p => p.Category.Name.ToLower() == category.ToLower());
             }
 
             var products = await query
-                .OrderByDescending(p => p.CreatedAt) // Mới nhất lên đầu
+                .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
 
-            // Truyền category vào ViewBag để hiển thị title
             ViewBag.CurrentCategory = category;
 
             return View(products);
         }
 
         // GET: /Product/Detail/5
-        // Trang chi tiết sản phẩm
         public async Task<IActionResult> Detail(int id)
         {
             if (id <= 0) return NotFound();
 
-            // Lấy sản phẩm theo ID
             var product = await _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.ProductVariants)
-                .Include(p => p.Reviews) // Nếu muốn hiển thị đánh giá
+                .Include(p => p.Reviews.Where(r => r.IsApproved))
+                    .ThenInclude(r => r.User)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
@@ -61,13 +58,13 @@ namespace EyelixEyewear_Project.Controllers
                 return NotFound();
             }
 
-            // Lấy 4 sản phẩm liên quan (cùng Category, khác ID hiện tại)
+            // Lấy sản phẩm liên quan (cũng cần Reviews)
             var relatedProducts = await _context.Products
+                .Include(p => p.Reviews)  // ← THÊM DÒNG NÀY
                 .Where(p => p.CategoryId == product.CategoryId && p.Id != id && p.IsActive)
                 .Take(4)
                 .ToListAsync();
 
-            // Đưa dữ liệu vào ViewModel
             var viewModel = new ProductDetailViewModel
             {
                 Product = product,
@@ -76,5 +73,120 @@ namespace EyelixEyewear_Project.Controllers
 
             return View(viewModel);
         }
+
+        // ==========================================
+        // ADD REVIEW
+        // ==========================================
+        [HttpPost]
+        public async Task<IActionResult> AddReview(int productId, int rating, string comment)
+        {
+            try
+            {
+                // Kiểm tra đăng nhập
+                if (!User.Identity.IsAuthenticated)
+                {
+                    return Json(new { success = false, message = "Please login to submit a review" });
+                }
+
+                // Lấy UserId
+                var username = User.Identity.Name;
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+
+                if (user == null)
+                {
+                    return Json(new { success = false, message = "User not found" });
+                }
+
+                // Kiểm tra đã review chưa
+                var existingReview = await _context.Reviews
+                    .FirstOrDefaultAsync(r => r.ProductId == productId && r.UserId == user.Id);
+
+                if (existingReview != null)
+                {
+                    return Json(new { success = false, message = "You have already reviewed this product" });
+                }
+
+                // Validate
+                if (rating < 1 || rating > 5)
+                {
+                    return Json(new { success = false, message = "Rating must be between 1 and 5" });
+                }
+
+                if (string.IsNullOrWhiteSpace(comment) || comment.Length < 10)
+                {
+                    return Json(new { success = false, message = "Review must be at least 10 characters" });
+                }
+
+                // Tạo review mới
+                var review = new Review
+                {
+                    ProductId = productId,
+                    UserId = user.Id,
+                    Rating = rating,
+                    Comment = comment,
+                    CreatedAt = DateTime.UtcNow,
+                    IsApproved = true // Auto approve (hoặc false nếu muốn admin duyệt)
+                };
+
+                _context.Reviews.Add(review);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Review submitted successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
+        }
+
+        // ==========================================
+        // CHECK IF USER HAS REVIEWED
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> HasReviewed(int productId)
+        {
+            if (!User.Identity.IsAuthenticated)
+            {
+                return Json(new { hasReviewed = false });
+            }
+
+            var username = User.Identity.Name;
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+
+            if (user == null)
+            {
+                return Json(new { hasReviewed = false });
+            }
+
+            var hasReviewed = await _context.Reviews
+                .AnyAsync(r => r.ProductId == productId && r.UserId == user.Id);
+
+            return Json(new { hasReviewed = hasReviewed });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SearchProducts(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return Json(new { success = false, products = new List<object>() });
+            }
+
+            // Tìm kiếm sản phẩm theo tên
+            var products = await _context.Products
+                .Where(p => p.IsActive && p.Name.Contains(query))
+                .Take(8) // Giới hạn 8 kết quả
+                .Select(p => new
+                {
+                    id = p.Id,
+                    name = p.Name,
+                    price = p.Price,
+                    discountPrice = p.DiscountPrice,
+                    imageUrl = p.ImageUrl ?? "/images/default-product.jpg"
+                })
+                .ToListAsync();
+
+            return Json(new { success = true, products = products });
+        }
     }
-}
+    }

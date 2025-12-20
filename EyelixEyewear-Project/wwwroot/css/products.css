@@ -69,7 +69,7 @@
                 color: var(--text-light);
                 font-size: 18px;
             }
-        /* Filter */
+/* Filter */
         .filter-section {
             display: flex;
             justify-content: space-between;
@@ -111,7 +111,216 @@
             cursor: pointer;
             font-size: 14px;
         }
-        /* Product */
+
+/* ==========================================
+   FILTER OPTIONS - INTERACTIVE
+   ========================================== */
+
+.filter-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #687279;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+    .filter-option:hover {
+        color: #333;
+        padding-left: 0.25rem;
+    }
+
+    .filter-option.active {
+        color: #f08438;
+        font-weight: 600;
+    }
+
+/* Checkbox */
+.filter-checkbox {
+    font-size: 16px;
+    color: #687279;
+    transition: color 0.2s;
+}
+
+.filter-option.active .filter-checkbox {
+    color: #f08438;
+}
+
+/* ==========================================
+   RESET BUTTON
+   ========================================== */
+
+.btn-reset-filters {
+    width: 100%;
+    padding: 0.75rem;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    transition: all 0.3s;
+}
+
+    .btn-reset-filters:hover {
+        background: #f08438;
+        color: white;
+        border-color: #f08438;
+    }
+
+/* ==========================================
+   RESULT COUNT
+   ========================================== */
+
+.filter-result-count {
+    padding: 1rem 0;
+    margin-bottom: 1rem;
+    font-size: 14px;
+    color: #687279;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+/* ==========================================
+   FILTER SECTION ACCORDION
+   ========================================== */
+
+.filter-section-sidebar {
+    border-bottom: 1px solid #e5e5e5;
+    padding: 0.75rem 0;
+}
+
+.filter-header {
+    padding: 0.5rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #333;
+    transition: color 0.2s;
+}
+
+    .filter-header:hover {
+        color: #f08438;
+    }
+
+.toggle-icon {
+    font-size: 0.6rem;
+    color: #687279;
+    transition: transform 0.3s ease;
+}
+
+.filter-section-sidebar.open .toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Filter Content */
+.filter-content {
+    padding: 0.5rem 0;
+    max-height: 500px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+    .filter-content.collapsed {
+        max-height: 0;
+        padding: 0;
+    }
+
+.filter-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* ==========================================
+   NO RESULTS MESSAGE
+   ========================================== */
+
+.no-results-message {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    color: #687279;
+}
+
+    .no-results-message i {
+        font-size: 48px;
+        color: #ddd;
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+/* ==========================================
+   ACTIVE FILTERS DISPLAY (Optional)
+   ========================================== */
+
+.active-filters-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1rem 0;
+    margin-bottom: 1rem;
+}
+
+.active-filter-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    background: #f08438;
+    color: white;
+    border-radius: 20px;
+    font-size: 13px;
+}
+
+    .active-filter-tag button {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 0;
+        margin-left: 0.25rem;
+    }
+
+        .active-filter-tag button:hover {
+            transform: scale(1.1);
+        }
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 180px;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        position: static;
+        width: 100%;
+        padding-top: 0;
+        margin-bottom: 2rem;
+    }
+
+    .product-content-wrapper {
+        flex-direction: column;
+    }
+
+    .filter-section-sidebar {
+        border-bottom: 1px solid #e5e5e5;
+    }
+}
+/* Product */
         .products-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -119,17 +328,27 @@
             margin-bottom: 2rem;
         }
 
-        .product-item {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            transition: all 0.3s;
-        }
+.product-item {
+    position: relative;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s;
+}
 
-            .product-item:hover {
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                transform: translateY(-4px);
-            }
+    .product-item:hover .product-rating {
+        animation: ratingPulse 0.5s ease;
+    }
+
+@keyframes ratingPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
 
         .product-image {
             position: relative;
@@ -202,38 +421,36 @@
 
         .product-actions {
             display: flex;
-            gap: 0.75rem;
+            gap: 10px;
+            margin-top: 15px;
         }
 
-        .btn-add-cart {
-            flex: 1;
-            padding: 0.75rem;
-            background: var(--text-dark);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
+.btn-add-cart {
+    width: 100%;
+    min-width: 140px; /* ĐẢM BẢO ĐỦ RỘNG */
+    height: 42px;
+    padding: 0 16px;
+    background: #2c2c2c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap; /* ⭐ KHÔNG CHO TEXT XUỐNG DÒNG */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-            .btn-add-cart:hover {
-                background: var(--primary-dark);
-            }
-
-        .btn-wishlist {
-            padding: 0.75rem 1rem;
-            background: white;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 18px;
-            transition: all 0.3s;
-        }
-
-            .btn-wishlist:hover {
-                border-color: var(--primary-dark);
-                color: var(--primary-dark);
-            }
+    .btn-add-cart:hover {
+        background: #f08438;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(240, 132, 56, 0.2);
+    }
 
         @media (max-width: 768px) {
             .products-grid {
@@ -247,31 +464,88 @@
         }
         /* Star rating styles */
         .product-rating {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                margin: 0.75rem 0;
+                min-height: 20px;
         }
 
-        .star {
-            display: flex;
-            gap: 2px;
-        }
+.star {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+}
 
-            .star i {
-                color: #ffc107;
-                font-size: 14px;
-            }
+/* Style cho các icon ngôi sao */
+.star i {
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
 
-                .star i.far {
-                    color: #ddd;
-                }
+    /* Ngôi sao đầy (fas) - màu vàng */
+    .star i.fas {
+        color: #ffc107;
+    }
 
-        .rating-count {
-            font-size: 12px;
-            color: #687279;
-        }
+    /* Ngôi sao rỗng (far) - màu xám nhạt */
+    .star i.far {
+        color: #ddd;
+    }
 
+    /* Ngôi sao nửa - màu vàng */
+    .star i.fa-star-half-alt {
+        color: #ffc107;
+    }
+
+/* Số lượng review */
+.rating-count {
+    font-size: 13px;
+    color: #687279;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+    /* Khi chưa có review */
+    .rating-count.no-reviews {
+        color: #999;
+        font-style: italic;
+    }
+
+.product-item:hover .star i.fas,
+.product-item:hover .star i.fa-star-half-alt {
+    transform: scale(1.1);
+    filter: brightness(1.1);
+}
+
+/* ============================================
+   AVERAGE RATING DISPLAY (OPTIONAL)
+   Hiển thị số điểm trung bình bên cạnh sao
+   ============================================ */
+
+.rating-score {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+}
+
+.rating-number {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Kết hợp số điểm với sao */
+.rating-combined {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+    .rating-combined .rating-number {
+        min-width: 32px;
+    }
         .product-variations {
             display: flex;
             gap: 8px;
@@ -490,4 +764,41 @@
             .filter-option:hover::after {
                 width: 100%;
             }
- 
+@media (max-width: 768px) {
+    .quantity-cart-section {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+        .quantity-cart-section .btn-add-cart,
+        .add-to-cart-btn {
+            width: 100%;
+            min-width: auto;
+            font-size: 13px;
+        }
+
+    .btn-add-cart {
+        font-size: 12px;
+        height: 40px;
+        min-width: 120px;
+    }
+
+    .product-actions {
+        flex-direction: column;
+    }
+
+    @media (max-width: 768px) {
+        .star i {
+            font-size: 13px;
+            gap: 2px;
+        }
+
+        .rating-count {
+            font-size: 12px;
+        }
+
+        .product-detail .star i {
+            font-size: 16px;
+        }
+    }
+}

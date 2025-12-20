@@ -1,201 +1,156 @@
-const trendingProducts = [
-    { id: 1, name: 'Maison', image: 'images/products/maison.png', price: '777.000 VND' },
-    { id: 2, name: 'Nuit', image: 'images/products/nuit.png', price: '790.000 VND' },
-    { id: 3, name: 'Dada', image: 'images/products/dada.png', price: '780.000 VND' },
-    { id: 4, name: 'Luna', image: 'images/products/luna.png', price: '650.000 VND' },
-    { id: 5, name: 'Nova', image: 'images/products/nova.png', price: '720.000 VND' }
-];
-
-const allProducts = [...trendingProducts];
-
-
-// Open Search Overlay
-function openSearch() {
-    const overlay = document.getElementById('search-overlay');
-    
-    if (overlay) {
-        overlay.classList.add('active'); 
-        document.body.style.overflow = 'hidden'; 
-        
-        setTimeout(() => {
-            const input = document.getElementById('searchInput');
-            if(input) input.focus();
-        }, 100);
-
-        renderTrends(); 
-        renderRecentlyViewed();
-    } else {
-        console.error("Không tìm thấy phần tử #search-overlay trong HTML");
-    }
-}
-    
-    setTimeout(() => {
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-            searchInput.focus();
-        }
-    }, 300);
-
-
-// Close Search Overlay
-function closeSearch() {
-    const overlay = document.getElementById('search-overlay');
-    if (overlay) {
-        overlay.classList.remove('active');
-        document.body.style.overflow = ''; 
-    }
-}
-    
-// Clear search input
+let searchTimeout;
+const searchModal = document.getElementById('searchModal');
 const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.value = '';
-    }
+const searchResults = document.getElementById('searchResults');
 
-// Clear History
-function clearHistory() {
-    if (confirm('Are you sure you want to clear your viewing history?')) {
-        localStorage.removeItem('recentlyViewed');
-        renderRecentlyViewed();
-    }
+// Mở search modal
+function openSearchModal() {
+    searchModal.classList.add('show');
+    searchInput.focus();
+    searchInput.value = '';
+    showEmptyState();
 }
 
-// Render Trending Products
-function renderTrends() {
-    const grid = document.querySelector('.trends-grid');
-    if (!grid) return;
-    
-    if (grid.innerHTML.trim() === '') {
-        grid.innerHTML = trendingProducts.map(item => `
-            <div class="trend-item" style="cursor: pointer; text-align: center;">
-                <img src="${item.image}" alt="${item.name}" style="width: 100%; margin-bottom: 10px;">
-                <div class="trend-name" style="font-size: 14px; font-weight: 500;">${item.name}</div>
-            </div>
-        `).join('');
+// Đóng search modal
+function closeSearchModal() {
+    searchModal.classList.remove('show');
+    searchInput.value = '';
+    searchResults.innerHTML = '';
+}
+
+// Đóng khi click bên ngoài
+searchModal.addEventListener('click', function (e) {
+    if (e.target === searchModal) {
+        closeSearchModal();
     }
-}
-
-// Render Recently Viewed
-function renderRecentlyViewed() {
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeSearch();
-    });
 });
 
-// Add to Recently Viewed
-function addToRecentlyViewed(product) {
-    const stored = localStorage.getItem('recentlyViewed');
-    let recentlyViewed = stored ? JSON.parse(stored) : [];
-    
-    // Remove if already exists
-    recentlyViewed = recentlyViewed.filter(p => p.id !== product.id);
-    
-    // Add to beginning
-    recentlyViewed.unshift(product);
-    
-    // Keep only last 8 items
-    if (recentlyViewed.length > 8) {
-        recentlyViewed = recentlyViewed.slice(0, 8);
+// Đóng khi nhấn ESC
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && searchModal.classList.contains('show')) {
+        closeSearchModal();
     }
-    
-    localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed));
-    renderRecentlyViewed();
-}
+});
 
-// View Product
-function viewProduct(productId) {
-    const product = allProducts.find(p => p.id === productId);
-    if (product) {
-        addToRecentlyViewed(product);
-        closeSearch();
-        
-        // Redirect to product page (adjust URL as needed)
-        // window.location.href = `/product.html?id=${productId}`;
-        console.log('Viewing product:', product.name);
-    }
-}
+// Search khi user gõ
+searchInput.addEventListener('input', function () {
+    const query = this.value.trim();
 
-// Search Functionality
-function handleSearch(searchTerm) {
-    searchTerm = searchTerm.toLowerCase().trim();
-    
-    const trendsGrid = document.querySelector('.trends-grid');
-    const searchSection = document.querySelector('.search-section');
-    const sectionHeader = searchSection ? searchSection.querySelector('.section-header h3') : null;
-    
-    if (!trendsGrid) return;
-    
-    if (!searchTerm) {
-        // Reset to trends when search is empty
-        if (sectionHeader) {
-            sectionHeader.textContent = 'SEARCH TRENDS';
-        }
-        renderTrends();
+    // Clear timeout cũ
+    clearTimeout(searchTimeout);
+
+    if (query.length === 0) {
+        showEmptyState();
         return;
     }
-    
-    // Update section title to show search results
-    if (sectionHeader) {
-        sectionHeader.textContent = 'SEARCH RESULTS';
-    }
-    
-    // Filter products
-    const results = allProducts.filter(product => 
-        product.name.toLowerCase().includes(searchTerm)
-    );
-    
-    if (results.length === 0) {
-        trendsGrid.innerHTML = '<p class="no-history">No products found</p>';
+
+    if (query.length < 2) {
+        searchResults.innerHTML = `
+            <div class="search-empty">
+                <p>Type at least 2 characters to search...</p>
+            </div>
+        `;
         return;
     }
-    
-    trendsGrid.innerHTML = results.map(product => `
-        <div class="trend-item" onclick="viewProduct(${product.id})">
-            <img src="${product.image}" alt="${product.name}" class="trend-image">
-            <div class="trend-name">${product.name}</div>
+
+    // Hiển thị loading
+    showLoading();
+
+    // Debounce - chờ 500ms sau khi user ngừng gõ
+    searchTimeout = setTimeout(() => {
+        performSearch(query);
+    }, 500);
+});
+
+// Hiển thị loading
+function showLoading() {
+    searchResults.innerHTML = `
+        <div class="search-loading">
+            <div class="search-spinner"></div>
+            <p style="color: #999; font-size: 14px;">Searching...</p>
         </div>
-    `).join('');
+    `;
 }
 
-// Initialize Search
-function initSearch() {
-    // Render initial content
-    renderTrends();
-    renderRecentlyViewed();
-    
-    // Setup search input listener
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            handleSearch(e.target.value);
-        });
-    }
-    
-    // Close on ESC key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            closeSearch();
-        }
-    });
-    
-    // Close on overlay click
-    const overlay = document.getElementById('searchOverlay');
-    if (overlay) {
-        overlay.addEventListener('click', (e) => {
-            if (e.target.id === 'searchOverlay') {
-                closeSearch();
+// Hiển thị empty state
+function showEmptyState() {
+    searchResults.innerHTML = `
+        <div class="search-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+            </svg>
+            <p>Start typing to search for products...</p>
+        </div>
+    `;
+}
+
+// Thực hiện search
+function performSearch(query) {
+    fetch(`/Product/SearchProducts?query=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.products.length > 0) {
+                displayResults(data.products);
+            } else {
+                showNoResults(query);
             }
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+            searchResults.innerHTML = `
+                <div class="no-results">
+                    <p>An error occurred while searching. Please try again.</p>
+                </div>
+            `;
         });
-    }
 }
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSearch);
-} else {
-    initSearch();
+// Hiển thị kết quả
+function displayResults(products) {
+    let html = '';
 
+    products.forEach(product => {
+        const imageUrl = product.imageUrl || '/images/default-product.jpg';
+        const hasDiscount = product.discountPrice && product.discountPrice > 0;
+
+        let priceHtml = '';
+        if (hasDiscount) {
+            priceHtml = `
+                <div class="search-product-price has-discount">
+                    <span>${product.discountPrice.toLocaleString('vi-VN')} VND</span>
+                    <span class="original-price">${product.price.toLocaleString('vi-VN')} VND</span>
+                </div>
+            `;
+        } else {
+            priceHtml = `
+                <div class="search-product-price">${product.price.toLocaleString('vi-VN')} VND</div>
+            `;
+        }
+
+        html += `
+            <a href="/Product/Detail/${product.id}" class="search-product-item">
+                <img src="${imageUrl}" alt="${product.name}" class="search-product-image">
+                <div class="search-product-info">
+                    <div class="search-product-name">${product.name}</div>
+                    ${priceHtml}
+                </div>
+            </a>
+        `;
+    });
+
+    searchResults.innerHTML = html;
+}
+
+// Hiển thị không có kết quả
+function showNoResults(query) {
+    searchResults.innerHTML = `
+        <div class="no-results">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+            </svg>
+            <p>No products found for "<strong>${query}</strong>"</p>
+        </div>
+    `;
 }
