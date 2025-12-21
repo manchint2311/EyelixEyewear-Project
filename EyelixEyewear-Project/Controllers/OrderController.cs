@@ -134,19 +134,18 @@ namespace EyelixEyewear_Project.Controllers
                 int totalItems = cart.CartItems.Sum(x => x.Quantity);
 
                 // Trả về JSON báo thành công
-                return Json(new { success = true, message = "Đã thêm vào giỏ hàng!", totalItems = totalItems });
+                return Json(new { success = true, message = "Added to cart!", totalItems = totalItems });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+                return Json(new { success = false, message = "Error: " + ex.Message });
             }
         }
         // ==========================================
-        // 2. CHỨC NĂNG: XEM GIỎ HÀNG
+        // XEM GIỎ HÀNG
         // ==========================================
         public IActionResult Cart()
         {
-            // Kiểm tra đăng nhập
             if (!User.Identity.IsAuthenticated)
             {
                 TempData["ErrorMessage"] = "Please login to view your cart";
@@ -157,7 +156,7 @@ namespace EyelixEyewear_Project.Controllers
 
             var cart = _context.Carts
                 .Include(c => c.CartItems)
-                .ThenInclude(ci => ci.Product) // Load kèm thông tin sản phẩm
+                .ThenInclude(ci => ci.Product) 
                 .FirstOrDefault(c => c.UserId == userId);
 
             var viewModel = new CartViewModel();
@@ -183,7 +182,7 @@ namespace EyelixEyewear_Project.Controllers
         }
 
         // ==========================================
-        // 3. CHỨC NĂNG: XÓA SP KHỎI GIỎ
+        // XÓA SP KHỎI GIỎ
         // ==========================================
         [HttpPost]
         public IActionResult RemoveFromCart(int productId)
@@ -215,7 +214,7 @@ namespace EyelixEyewear_Project.Controllers
 
 
         // ==========================================
-        // 4. CHỨC NĂNG: CẬP NHẬT SỐ LƯỢNG
+        // CẬP NHẬT SỐ LƯỢNG
         // ==========================================
         [HttpPost]
         public IActionResult UpdateCart(int productId, int quantity)
@@ -254,7 +253,7 @@ namespace EyelixEyewear_Project.Controllers
         }
 
         // ==========================================
-        // 5. TRANG CHECKOUT (THANH TOÁN)
+        // 5. TRANG CHECKOUT 
         // ==========================================
         [HttpGet]
         public IActionResult Checkout()

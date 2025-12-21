@@ -3,43 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - Eyelix Admin</title>
+    <title>@ViewData["Title"] - Eyelix Admin</title>
 
-    <!-- Font Awesome -->
+    <link rel="stylesheet" href="~/css/admin/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Admin CSS -->
-    <link rel="stylesheet" href="~/css/admin/style.css" asp-append-version="true">
-
     <link rel="icon" href="~/images/logo/favicon.png" sizes="32x32">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <!-- SIDEBAR -->
+    <!-- Sidebar -->
     <div class="sidebar">
         <div class="brand">
             <h2>EYE<span>LIX</span></h2>
         </div>
         <ul class="side-menu">
             <li>
-                <a href="@Url.Action("Index", "Admin")" class="@(ViewContext.RouteData.Values["action"].ToString() == "Index" ? "active" : "")">
+                <a asp-controller="Admin" asp-action="Index"
+                   class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
                     <i class="fas fa-home"></i> Dashboard
                 </a>
             </li>
             <li>
-                <a href="@Url.Action("Products", "Admin")" class="@(ViewContext.RouteData.Values["action"].ToString() == "Products" ? "active" : "")">
+                <a asp-controller="Admin" asp-action="Products"
+                   class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Products" ? "active" : "")">
                     <i class="fas fa-glasses"></i> Products
                 </a>
             </li>
             <li>
-                <a href="@Url.Action("Orders", "Admin")" class="@(ViewContext.RouteData.Values["action"].ToString() == "Orders" ? "active" : "")">
+                <a asp-controller="Admin" asp-action="Orders"
+                   class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Orders" ? "active" : "")">
                     <i class="fas fa-shopping-cart"></i> Orders
                 </a>
             </li>
             <li>
-                <a href="@Url.Action("Customers", "Admin")" class="@(ViewContext.RouteData.Values["action"].ToString() == "Customers" ? "active" : "")">
+                <a asp-controller="Admin" asp-action="Customers"
+                   class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Customers" ? "active" : "")">
                     <i class="fas fa-users"></i> Customers
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Admin" asp-action="Logout">
+                    <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
             </li>
             <li>
@@ -50,14 +57,40 @@
         </ul>
     </div>
 
-    <!-- MAIN CONTENT -->
+    <!-- Main Content -->
     <div class="main-content">
         @RenderBody()
     </div>
 
-    <!-- jQuery -->
-    <script src="~/lib/jquery/jquery.min.js"></script>
-
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="~/js/admin/main.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '@TempData["SuccessMessage"]',
+                showConfirmButton: false,
+                timer: 2000,
+                toast: true,
+                position: 'top-end'
+            });
+        </script>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: '@TempData["ErrorMessage"]',
+                confirmButtonColor: '#e00d0d'
+            });
+        </script>
+    }
 </body>
 </html>

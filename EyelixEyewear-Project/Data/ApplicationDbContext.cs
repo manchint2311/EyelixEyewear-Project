@@ -15,6 +15,7 @@ namespace EyelixEyewear_Project.Data
         // ==========================================
         public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<Collection> Collections { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
@@ -36,6 +37,13 @@ namespace EyelixEyewear_Project.Data
                 .WithMany(c => c.Products)
                 .HasForeignKey(p => p.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            //Product -> Collection
+            //modelBuilder.Entity<Product>()
+            //    .HasOne(p => p.Collection)
+            //    .WithMany(c => c.Products)
+            //    .HasForeignKey(p => p.CollectionId)
+            //   .OnDelete(DeleteBehavior.SetNull);
 
             // Config Decimal (Tiền tệ)
             modelBuilder.Entity<Product>().Property(p => p.Price).HasColumnType("decimal(18,2)");
@@ -106,15 +114,40 @@ namespace EyelixEyewear_Project.Data
 
         private void SeedData(ModelBuilder modelBuilder)
         {
-            // --- A. SEED CATEGORIES ---
+            var createdDate = new DateTime(2024, 1, 1);
+            // --- SEED CATEGORIES ---
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 1, Name = "Glasses", Description = "Optical frames for everyday wear", ImageUrl = "/images/collections/aluminium.webp", DisplayOrder = 1, IsActive = true },
                 new Category { Id = 2, Name = "Sunglasses", Description = "UV-protective sunglasses", ImageUrl = "/images/collections/sun-code-1.jpg", DisplayOrder = 2, IsActive = true }
             );
 
-            // --- B. SEED PRODUCTS ---
-            var createdDate = new DateTime(2024, 1, 1);
+            // --- SEED COLLECTIONS ---
+            modelBuilder.Entity<Collection>().HasData(
+                new Collection
+                {
+                    Id = 1,
+                    Name = "Fall/Winter 2025",
+                    Slug = "fall-winter-2025",
+                    Description = "Our newest collection featuring warm tones and cozy designs for the fall and winter season.",
+                    BannerImageUrl = "/images/collections/fall-winter-banner.jpg",
+                    DisplayOrder = 1,
+                    IsActive = true,
+                    CreatedAt = createdDate
+                },
+                new Collection
+                {
+                    Id = 2,
+                    Name = "Recycled Aluminium",
+                    Slug = "recycled-aluminium",
+                    Description = "Eco-friendly eyewear crafted from 100% recycled aluminium materials.",
+                    BannerImageUrl = "/images/collections/aluminium-banner.jpg",
+                    DisplayOrder = 2,
+                    IsActive = true,
+                    CreatedAt = createdDate
+                }
+            );
 
+            // --- SEED PRODUCTS ---
             modelBuilder.Entity<Product>().HasData(
                 // 1. Oris (Glasses)
                 new Product
@@ -144,9 +177,9 @@ namespace EyelixEyewear_Project.Data
                     Stock = 30,
                     CategoryId = 1, // Glasses
                     ImageUrl = "/images/products/jules.png",
-                    FrameMaterial = "Recycled Metal",
+                    FrameMaterial = "Bio Acetate",
                     FrameShape = "Squared",
-                    Color = "Tortoise",
+                    Color = "Wood",
                     IsActive = true,
                     CreatedAt = createdDate
                 },
@@ -179,29 +212,29 @@ namespace EyelixEyewear_Project.Data
                     CategoryId = 2, // Sunglasses
                     ImageUrl = "/images/products/nuit.png",
                     FrameMaterial = "Bio Acetate",
-                    FrameShape = "Square",
-                    Color = "Brown",
+                    FrameShape = "Squared",
+                    Color = "Black",
                     IsActive = true,
                     CreatedAt = createdDate
                 },
-                // 5. Kala (Sunglasses) - Featured Product
+                // 5. Kala - Featured Product
                 new Product
                 {
                     Id = 5,
                     Name = "Kala",
                     SKU = "SL-003",
-                    Description = "Stand out from the crowd with Kala polarized sunglasses. Premium feel.",
+                    Description = "Stand out from the crowd with Kala polarized sunglasses. Our sleek and stylish unisex frames are made from 95% recycled metal. ",
                     Price = 650000,
                     Stock = 45,
-                    CategoryId = 2, // Sunglasses
+                    CategoryId = 2, 
                     ImageUrl = "/images/products/kala-black.jpg",
                     FrameMaterial = "Recycled Aluminium",
-                    FrameShape = "Aviator",
-                    Color = "Gold",
+                    FrameShape = "Rounded",
+                    Color = "Black",
                     IsActive = true,
                     CreatedAt = createdDate
                 },
-                // 6. Dada (Sunglasses) - Sale Product
+                // 6. Dada (Sunglasses) 
                 new Product
                 {
                     Id = 6,
@@ -209,13 +242,51 @@ namespace EyelixEyewear_Project.Data
                     SKU = "SL-004",
                     Description = "Bold and chunky frames for a fashion statement.",
                     Price = 900000,
-                    DiscountPrice = 780000, // Đang giảm giá
-                    Stock = 10,
-                    CategoryId = 2, // Sunglasses
+                    DiscountPrice = 780000, 
+                    Stock = 150,
+                    CategoryId = 2, 
                     ImageUrl = "/images/products/dada.png",
-                    FrameMaterial = "Plastic",
+                    FrameMaterial = "Bio Acetate",
                     FrameShape = "Cat-eye",
                     Color = "Black",
+                    IsActive = true,
+                    CreatedAt = createdDate
+                },
+
+                // 7. Mistral - Aluminium Glasses
+                new Product
+                {
+                    Id = 8,
+                    Name = "Mistral",
+                    SKU = "GL-003",
+                    Description = "With its modern geometric silhouette and slim recycled metal frame, Mistral strikes the perfect balance between retro charm and contemporary style. Lightweight yet durable, these glasses are designed to complement any look with ease.",
+                    Price = 450000,
+                    Stock = 300,
+                    CategoryId = 1, 
+                    CollectionId = 2, 
+                    ImageUrl = "/images/products/mistral.png",
+                    FrameMaterial = "Recycled Metal",
+                    FrameShape = "Rounded",
+                    Color = "Olive",
+                    IsActive = true,
+                    CreatedAt = createdDate
+                },
+
+                // 8. Aura - Fall/Winter 2025 Glasses
+                new Product
+                {
+                    Id = 9,
+                    Name = "Aura",
+                    SKU = "GL-004",
+                    Description = "Aura plays with geometric angles in a softened hexagonal shape – unexpected and chic. Complete your style with the seamless magnetic clip-on, perfect for sunny days.",
+                    Price = 550000,
+                    Stock = 300,
+                    CategoryId = 1,
+                    CollectionId = 1,
+                    ImageUrl = "/images/products/aura.png",
+                    FrameMaterial = "Recycled Metal",
+                    FrameShape = "Squared",
+                    Color = "Rasberry",
                     IsActive = true,
                     CreatedAt = createdDate
                 }

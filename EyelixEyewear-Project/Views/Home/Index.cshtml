@@ -1,19 +1,14 @@
-﻿@* Views/Home/Index.cshtml *@
+﻿
 @using EyelixEyewear_Project.Models.ViewModels
 @model EyelixEyewear_Project.Models.ViewModels.HomeViewModel
+
+@{
+    ViewData["Title"] = "Carbon Negative Glasses";
+}
 
 @section Styles {
     <link rel="stylesheet" href="~/css/slide.css" />
 }
-
-<!-- Promo Banner -->
-<div class="promo-banner">
-    <div class="promo-slider">
-        <div class="promo-slide">15% off for first order with code WELCOME15</div>
-        <div class="promo-slide">Eyelix Green Deal - 20% off for every pair</div>
-        <div class="promo-slide">20.000 off all Fall/Winter 2025 items with code FALL20</div>
-    </div>
-</div>
 
 <!-- Hero Section -->
 <section class="hero">
@@ -22,7 +17,7 @@
     </video>
     <div class="hero-content">
         <h1>Be Seen<br>Be Green</h1>
-        <a asp-controller="Home" asp-action="OurStory" class="btn-primary">discover us</a>
+        <a asp-controller="Home" asp-action="About" class="btn-primary">discover us</a>
     </div>
 </section>
 

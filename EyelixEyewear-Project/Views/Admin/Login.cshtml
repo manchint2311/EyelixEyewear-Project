@@ -186,12 +186,6 @@
 
         <div id="message" class="message"></div>
 
-        <div class="demo-info">
-            <strong>📝 Demo Credentials:</strong>
-            Username: <code>admin</code><br>
-            Password: <code>admin123</code>
-        </div>
-
         <div class="back-link">
             <a href="@Url.Action("Index", "Home")">← Back to Website</a>
         </div>
@@ -223,6 +217,7 @@
 
                         setTimeout(function() {
                             window.location.href = '/Admin/Orders';
+                            window.location.href = '@Url.Action("Index", "Admin")';
                         }, 1000);
                     } else {
                         msg.removeClass('success').addClass('error');

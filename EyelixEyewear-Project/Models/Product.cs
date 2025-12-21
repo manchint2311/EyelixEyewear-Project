@@ -28,14 +28,15 @@ public class Product
     public string? FrameMaterial { get; set; }
     public string? LensMaterial { get; set; }
     public string? FrameShape { get; set; }
-    public string? Gender { get; set; }
     public string? Color { get; set; }
 
     // FK
     public int CategoryId { get; set; }
+    public int? CollectionId { get; set; }
 
     // Navigation
     public Category Category { get; set; } = null!;
+    //public Collection? Collection { get; set; }
     public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
     public ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
     public ICollection<Review> Reviews { get; set; } = new List<Review>();

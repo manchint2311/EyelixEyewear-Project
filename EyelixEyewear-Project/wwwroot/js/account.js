@@ -1,4 +1,4 @@
-function showSection(sectionName) {
+﻿function showSection(sectionName) {
             // Hide all sections
             const sections = document.querySelectorAll('.section-content');
             sections.forEach(section => section.classList.remove('active'));

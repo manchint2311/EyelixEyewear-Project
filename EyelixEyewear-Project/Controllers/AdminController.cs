@@ -65,28 +65,41 @@ namespace EyelixEyewear_Project.Controllers
             return Json(new { success = false, message = "Invalid credentials" });
         }
 
-        // ==========================================
-        // LOGOUT (Đã sửa lỗi)
-        // ==========================================
-        [HttpGet] // Thêm HttpGet cho rõ ràng
-        public async Task<IActionResult> Logout() // Phải đổi thành async Task
+        // ========
+        // LOGOUT 
+        // ========
+        [HttpGet]
+        public async Task<IActionResult> Logout()
         {
-            // 1. Quan trọng nhất: Xóa Cookie xác thực
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
-            // 2. Xóa Session (dọn dẹp cho sạch sẽ)
-            HttpContext.Session.Clear();
-
-            // 3. Chuyển hướng về trang đăng nhập
-            return RedirectToAction("Login");
+            return RedirectToAction("Login", "Admin");
         }
 
         // ==========================================
-        // 1. DASHBOARD (Trang chủ Admin)
+        // DASHBOARD - Get Top Products
         // ==========================================
+        [HttpGet]
+        public IActionResult GetTopProducts()
+        {
+            var topProducts = _context.OrderDetails
+                .GroupBy(od => new { od.ProductId, od.Product.Name })
+                .Select(g => new
+                {
+                    name = g.Key.Name,
+                    sold = g.Sum(od => od.Quantity)
+                })
+                .OrderByDescending(x => x.sold)
+                .Take(5)
+                .ToList();
+
+            return Json(topProducts);
+        }
+
+        // ==============================
+        // INDEX - DASHBOARD
+        // ===============================
         public IActionResult Index()
         {
-            // Tính toán statistics
             var totalOrders = _context.Orders.Count();
             var totalSales = _context.Orders.Sum(o => o.TotalAmount);
             var totalProducts = _context.Products.Count();
@@ -102,7 +115,128 @@ namespace EyelixEyewear_Project.Controllers
 
             return View(model);
         }
-                  
+
+        // ==============================
+        // DASHBOARD - Get Recent Orders
+        // ===============================
+        [HttpGet]
+        public IActionResult GetRecentOrders()
+        {
+            var recentOrders = _context.Orders
+                .OrderByDescending(o => o.OrderDate)
+                .Take(5)
+                .Select(o => new
+                {
+                    orderNumber = o.OrderNumber,
+                    customerName = o.ShippingName,
+                    orderDate = o.OrderDate,
+                    status = o.Status,
+                    totalAmount = o.TotalAmount
+                })
+                .ToList();
+
+            return Json(recentOrders);
+        }
+
+        // ================
+        // CUSTOMER DETAIL
+        // ================
+        [HttpGet]
+        public async Task<IActionResult> GetCustomerDetail(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "Customer not found" });
+            }
+
+            var orders = await _context.Orders
+                .Where(o => o.UserId == id)
+                .OrderByDescending(o => o.OrderDate)
+                .Select(o => new
+                {
+                    orderNumber = o.OrderNumber,
+                    orderDate = o.OrderDate,
+                    status = o.Status,
+                    totalAmount = o.TotalAmount
+                })
+                .ToListAsync();
+
+            var totalOrders = orders.Count;
+            var totalSpent = orders.Sum(o => o.totalAmount);
+
+            return Json(new
+            {
+                success = true,
+                customer = new
+                {
+                    id = user.Id,
+                    name = user.FullName,
+                    email = user.Email,
+                    phone = user.PhoneNumber,
+                    address = user.Address,
+                    totalOrders = totalOrders,
+                    totalSpent = totalSpent,
+                    orders = orders
+                }
+            });
+        }
+
+        // ==========================================
+        // TOGGLE CUSTOMER STATUS (Block/Unblock)
+        // ==========================================
+        [HttpPost]
+        public async Task<IActionResult> ToggleCustomerStatus(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "Customer not found" });
+            }
+
+            user.IsActive = !user.IsActive;
+            await _context.SaveChangesAsync();
+
+            string status = user.IsActive ? "activated" : "blocked";
+            return Json(new
+            {
+                success = true,
+                message = $"Customer {status} successfully",
+                isActive = user.IsActive
+            });
+        }
+
+        // ===============
+        // DELETE CUSTOMER 
+        // ================
+        [HttpPost]
+        public async Task<IActionResult> DeleteCustomer(int id)
+        {
+            var user = await _context.Users
+                .Include(u => u.Orders)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+            {
+                return Json(new { success = false, message = "Customer not found" });
+            }
+
+            // Không cho xóa customer có orders
+            if (user.Orders.Any())
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Cannot delete customer with existing orders. Please block instead."
+                });
+            }
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Customer deleted successfully" });
+        }
+
         // ==========================================
         // 2. ORDERS MANAGEMENT
         // ==========================================
@@ -246,7 +380,6 @@ namespace EyelixEyewear_Project.Controllers
                 frameMaterial = product.FrameMaterial,
                 lensMaterial = product.LensMaterial,
                 frameShape = product.FrameShape,
-                gender = product.Gender,
                 color = product.Color,
                 categoryId = product.CategoryId,
                 isActive = product.IsActive
@@ -279,7 +412,6 @@ namespace EyelixEyewear_Project.Controllers
                     FrameMaterial = model.FrameMaterial,
                     LensMaterial = model.LensMaterial,
                     FrameShape = model.FrameShape,
-                    Gender = model.Gender,
                     Color = model.Color,
                     CategoryId = model.CategoryId,
                     IsActive = model.IsActive,
@@ -327,7 +459,6 @@ namespace EyelixEyewear_Project.Controllers
                 product.FrameMaterial = model.FrameMaterial;
                 product.LensMaterial = model.LensMaterial;
                 product.FrameShape = model.FrameShape;
-                product.Gender = model.Gender;
                 product.Color = model.Color;
                 product.CategoryId = model.CategoryId;
                 product.IsActive = model.IsActive;

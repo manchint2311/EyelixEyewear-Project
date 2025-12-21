@@ -1,11 +1,16 @@
-﻿/* Header Styles */
-#header {
+﻿
+.main-nav {
+    position: fixed;
+    padding: 18px 0;
+    top: 0;
+    left: 0;
     width: 100%;
-    position: relative;
     background: #fff;
     z-index: 1000;
-    box-shadow: 0 2px 5px #272727);
+    box-shadow: 0 2px 5px rgba(39, 39, 39, 0.1);
 }
+
+body {
 
 /* Top Bar */
 .top-bar {
@@ -15,11 +20,6 @@
     padding: 8px 0;
     font-size: 0.85rem;
     letter-spacing: 1px;
-}
-
-/* Main Navigation */
-.main-nav {
-    padding: 18px 0;
 }
 
 .nav-wrapper {
@@ -99,7 +99,7 @@
 }
 
     .submenu li a:hover {
-        background: #ffffff;
+        background: #f5f5f5;
     }
 
 /* Logo Center */
@@ -182,7 +182,7 @@ body:not(.authenticated) .cart-count {
 }
 
     .nav-right .btn-wishlist:hover {
-        color: var(--primary-dark);
+        color: #e27b0d;
         transform: translateY(-1px);
     }
 
@@ -239,6 +239,21 @@ body:not(.authenticated) .cart-count {
     .logo {
         margin: 0;
     }
+
+    /* Điều chỉnh padding-top cho mobile */
+    body {
+        padding-top: 80px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-nav .nav-wrapper {
+        padding: 0 20px;
+    }
+
+    body {
+        padding-top: 70px;
+    }
 }
 
 /* SVG Icons Styling */
@@ -255,16 +270,9 @@ body:not(.authenticated) .cart-count {
 
 /* Ghi đè nav-wrapper để tràn viền */
 .main-nav .nav-wrapper {
-    max-width: 100% !important; /* Bỏ giới hạn chiều rộng */
+    max-width: 100% !important;
     width: 100%;
-    padding: 0 60px; /* Cách lề trái phải 60px cho thoáng */
+    padding: 0 60px;
     margin: 0;
-    justify-content: space-between; /* Đẩy 2 menu ra xa nhau */
-}
-
-/* Responsive cho mobile thì giảm padding lại */
-@media (max-width: 768px) {
-    .main-nav .nav-wrapper {
-        padding: 0 20px;
-    }
+    justify-content: space-between;
 }

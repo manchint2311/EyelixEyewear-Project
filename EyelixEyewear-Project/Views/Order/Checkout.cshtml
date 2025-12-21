@@ -185,7 +185,7 @@
                                 <input type="radio" name="payment" value="momo">
                                 <span>Momo QRCode</span>
                             </label>
-                            <img src="~/Content/images/logo/momo.png" alt="Momo" class="payment-logo">
+                            <img src="~/images/logo/momo.png" alt="Momo" class="payment-logo">
                         </div>
                     </div>
 
@@ -195,7 +195,7 @@
                                 <input type="radio" name="payment" value="credit">
                                 <span>Credit / Debit Card</span>
                             </label>
-                            <img src="~/Content/images/logo/credit-card-icon.svg" alt="credit card icon" class="payment-logo">
+                            <img src="~/images/logo/credit-card-icon.svg" alt="credit card icon" class="payment-logo">
                         </div>
                     </div>
                 </div>
@@ -224,15 +224,12 @@
 
                 <script>
                     document.addEventListener("DOMContentLoaded", function () {
-                        // Cập nhật giá trị PaymentMethod khi user click chọn
                         var radios = document.querySelectorAll('input[name="payment"]');
                         radios.forEach(radio => {
                             radio.addEventListener('change', function () {
                                 document.querySelector('input[name="PaymentMethod"]').value = this.value;
                             });
                         });
-
-                        // (Optional) Logic đổi phí ship 20k/50k ở đây nếu cần visual update
                     });
                 </script>
             </div>

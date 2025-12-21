@@ -5,23 +5,51 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/account.css">
+    
 }
 
-<div class="container" style="padding-top: 50px; padding-bottom: 80px;">
-    <h1>My account</h1>
+<div class="container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <p>Customer Dashboard</p>
+    </div>
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success" style="color: green; background: #e6fffa; padding: 10px; margin-bottom: 20px; border: 1px solid #b2f5ea; border-radius: 4px;">
+        <div class="alert alert-success">
             @TempData["SuccessMessage"]
         </div>
     }
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-danger" style="color: red; background: #fff5f5; padding: 10px; margin-bottom: 20px; border: 1px solid #feb2b2; border-radius: 4px;">
+        <div class="alert alert-danger">
             @TempData["ErrorMessage"]
         </div>
     }
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📦</div>
+            <div class="stat-value">@Model.Orders.Count</div>
+            <div class="stat-label">Total Orders</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-value">@Model.Orders.Count(o => o.Status == "Processing")</div>
+            <div class="stat-label">Processing</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value">@Model.Orders.Count(o => o.Status == "Completed")</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value">@Model.Orders.Sum(o => o.TotalAmount).ToString("N0")</div>
+            <div class="stat-label">Total Spent (VND)</div>
+        </div>
+    </div>
 
     <div class="account-wrapper">
         <div class="sidebar">
@@ -59,7 +87,7 @@
                         <p>Welcome back to your account dashboard.</p>
                     </div>
                 </div>
-                <p>From your account dashboard you can view your <a href="#" onclick="showSection('orders')">recent orders</a>, manage your <a href="#" onclick="showSection('addresses')">shipping and billing addresses</a>, and <a href="#" onclick="showSection('account-details')">edit your password and account details</a>.</p>
+                <p style="color: #687279; line-height: 1.8;">From your account dashboard you can view your <a href="#" onclick="showSection('orders'); return false;" style="color: #f08438; font-weight: 600;">recent orders</a>, manage your <a href="#" onclick="showSection('addresses'); return false;" style="color: #f08438; font-weight: 600;">shipping and billing addresses</a>, and <a href="#" onclick="showSection('account-details'); return false;" style="color: #f08438; font-weight: 600;">edit your password and account details</a>.</p>
             </div>
 
             <div id="orders-section" class="section-content" style="display:none;">

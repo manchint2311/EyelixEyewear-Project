@@ -43,6 +43,38 @@ namespace EyelixEyewear.Controllers
             return View(viewModel);
         }
 
+        //  GET: Home/Collection 
+        public async Task<IActionResult> Collection(string slug)
+        {
+            if (string.IsNullOrEmpty(slug))
+            {
+                return NotFound();
+            }
+
+            // Tìm collection theo slug
+            var collection = await _context.Collections
+                .Include(c => c.Products)
+                    .ThenInclude(p => p.Category)
+                .Include(c => c.Products)
+                    .ThenInclude(p => p.Reviews)
+                .Include(c => c.Products)
+                    .ThenInclude(p => p.ProductVariants)
+                .FirstOrDefaultAsync(c => c.Slug == slug && c.IsActive);
+
+            if (collection == null)
+            {
+                return NotFound();
+            }
+
+            var activeProducts = collection.Products.Where(p => p.IsActive).ToList();
+
+            ViewBag.CollectionName = collection.Name;
+            ViewBag.CollectionDescription = collection.Description;
+            ViewBag.CollectionBanner = collection.BannerImageUrl;
+
+            return View(activeProducts);
+        }
+
         // GET: Home/About
         public IActionResult About()
         {
@@ -98,14 +130,6 @@ namespace EyelixEyewear.Controllers
         // GET: Home/FAQ
         public IActionResult FAQ()
         {
-            return View();
-        }
-
-        // GET: Home/Collection/fall-winter-2025
-        public IActionResult Collection(string slug)
-        {
-            // TODO: Lấy thông tin collection từ database
-            ViewData["CollectionSlug"] = slug;
             return View();
         }
 
