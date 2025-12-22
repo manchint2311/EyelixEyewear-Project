@@ -33,14 +33,13 @@ namespace EyelixEyewear_Project.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Kiểm tra username hoặc email đã tồn tại chưa
                 if (await _context.Users.AnyAsync(u => u.Username == model.Username || u.Email == model.Email))
                 {
-                    ModelState.AddModelError("", "Tên đăng nhập hoặc Email đã tồn tại.");
+                    ModelState.AddModelError("", "Username or Email already exists.");
                     return View(model);
                 }
 
-                // 2. Tạo user mới (Dùng AppUser thay vì User)
+                // 2. Tạo user mới 
                 var newUser = new AppUser
                 {
                     FullName = model.FullName,
@@ -48,7 +47,7 @@ namespace EyelixEyewear_Project.Controllers
                     Email = model.Email,
                     PhoneNumber = model.PhoneNumber,
                     Address = model.Address,
-                    Role = "Customer", // Mặc định là khách hàng
+                    Role = "Customer",
 
                     // Gọi PasswordHelper bạn đã có
                     PasswordHash = PasswordHelper.HashPassword(model.Password),
@@ -60,13 +59,13 @@ namespace EyelixEyewear_Project.Controllers
                 _context.Users.Add(newUser);
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = "Đăng ký thành công! Vui lòng đăng nhập.";
+                TempData["SuccessMessage"] = "Successful! Please log in.";
                 return RedirectToAction("Login");
             }
             return View(model);
         }
 
-        // ================= ĐĂNG NHẬP (LOGIN) =================
+        // ================= LOGIN =================
         [HttpGet]
         public IActionResult Login()
         {
@@ -82,12 +81,12 @@ namespace EyelixEyewear_Project.Controllers
                 // 1. Tìm user trong DB
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == model.Username);
 
-                // 2. Kiểm tra password (Dùng VerifyPassword từ Helper của bạn)
+                // 2. Kiểm tra password 
                 if (user != null && PasswordHelper.VerifyPassword(model.Password, user.PasswordHash))
                 {
                     if (!user.IsActive)
                     {
-                        ModelState.AddModelError("", "Tài khoản đã bị khóa.");
+                        ModelState.AddModelError("", "Your account has been locked.");
                         return View(model);
                     }
 
@@ -100,7 +99,7 @@ namespace EyelixEyewear_Project.Controllers
                         new Claim("FullName", user.FullName)
                     };
 
-                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                    var claimsIdentity = new ClaimsIdentity(claims, "Customer");
                     var authProperties = new AuthenticationProperties
                     {
                         IsPersistent = model.RememberMe,
@@ -108,14 +107,14 @@ namespace EyelixEyewear_Project.Controllers
                     };
 
                     await HttpContext.SignInAsync(
-                        CookieAuthenticationDefaults.AuthenticationScheme,
+                        "Customer",
                         new ClaimsPrincipal(claimsIdentity),
                         authProperties);
 
                     return RedirectToAction("Index", "Home");
                 }
 
-                ModelState.AddModelError("", "Sai tên đăng nhập hoặc mật khẩu.");
+                ModelState.AddModelError("", "Incorrect username or password.");
             }
             return View(model);
         }
@@ -123,12 +122,12 @@ namespace EyelixEyewear_Project.Controllers
         // ================= ĐĂNG XUẤT (LOGOUT) =================
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync("Customer");
             return RedirectToAction("Login");
         }
 
         // ================= PROFILE DASHBOARD =================
-        [Authorize] // Bắt buộc đăng nhập
+        [Authorize(AuthenticationSchemes = "Customer")] 
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
@@ -160,7 +159,7 @@ namespace EyelixEyewear_Project.Controllers
             return View(model);
         }
 
-        [Authorize]
+        [Authorize(AuthenticationSchemes = "Customer")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateProfile(UserProfileViewModel model)
@@ -190,8 +189,8 @@ namespace EyelixEyewear_Project.Controllers
                     // Kiểm tra mật khẩu cũ
                     if (!PasswordHelper.VerifyPassword(model.CurrentPassword, user.PasswordHash))
                     {
-                        ModelState.AddModelError("CurrentPassword", "Mật khẩu hiện tại không đúng.");
-                        TempData["ErrorMessage"] = "Cập nhật thất bại: Sai mật khẩu cũ.";
+                        ModelState.AddModelError("CurrentPassword", "The current password is incorrect.");
+                        TempData["ErrorMessage"] = "Update failed: Incorrect old password.";
                         return View("Profile", model);
                     }
 
@@ -202,11 +201,11 @@ namespace EyelixEyewear_Project.Controllers
                 _context.Users.Update(user);
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = "Cập nhật thông tin thành công!";
+                TempData["SuccessMessage"] = "Information updated successfully!";
                 return RedirectToAction("Profile");
             }
 
-            TempData["ErrorMessage"] = "Vui lòng kiểm tra lại thông tin nhập vào.";
+            TempData["ErrorMessage"] = "Please check the information you have entered.";
             return View("Profile", model);
         }
 

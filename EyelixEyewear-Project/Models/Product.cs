@@ -34,9 +34,13 @@ public class Product
     public int CategoryId { get; set; }
     public int? CollectionId { get; set; }
 
-    // Navigation
+    [Required]
+    [MaxLength(50)]
+    public string SKU { get; set; } = string.Empty; // ← Sửa thành public
+
+    // Navigation Properties
     public Category Category { get; set; } = null!;
-    //public Collection? Collection { get; set; }
+    public Collection? Collection { get; set; } // ← BỎ COMMENT DÒNG NÀY!
     public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
     public ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
@@ -45,5 +49,4 @@ public class Product
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
     public bool IsActive { get; set; } = true;
-    public string SKU { get; internal set; }
 }

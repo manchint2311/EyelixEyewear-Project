@@ -14,15 +14,15 @@ namespace EyelixEyewear_Project.Controllers
         {
             _context = context;
         }
+
         // ===================================================
-        // INCLUDE REVIEWS
+        // PRODUCT INDEX BY CATEGORY
         // ===================================================
         public async Task<IActionResult> Index(string category)
         {
-            // .Include(p => p.Reviews)
             var query = _context.Products
                 .Include(p => p.Category)
-                .Include(p => p.Reviews)  // ← THÊM DÒNG NÀY
+                .Include(p => p.Reviews)
                 .Include(p => p.ProductVariants)
                 .Where(p => p.IsActive);
 
@@ -41,7 +41,45 @@ namespace EyelixEyewear_Project.Controllers
             return View(products);
         }
 
-        // GET: /Product/Detail/5
+        // ===================================================
+        // COLLECTION BY SLUG - THÊM METHOD NÀY
+        // ===================================================
+        public async Task<IActionResult> Collection(string slug)
+        {
+            if (string.IsNullOrEmpty(slug))
+            {
+                return NotFound();
+            }
+
+            // 1. Tìm Collection theo slug
+            var collection = await _context.Collections
+                .FirstOrDefaultAsync(c => c.Slug == slug && c.IsActive);
+
+            if (collection == null)
+            {
+                return NotFound();
+            }
+
+            // 2. Lấy tất cả products thuộc collection này
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Reviews)
+                .Include(p => p.ProductVariants)
+                .Where(p => p.CollectionId == collection.Id && p.IsActive)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            // 3. Truyền thông tin collection vào ViewBag
+            ViewBag.CollectionName = collection.Name;
+            ViewBag.CollectionDescription = collection.Description;
+            ViewBag.CollectionBanner = collection.BannerImageUrl ?? "/images/banner/default-banner.jpg";
+
+            return View(products);
+        }
+
+        // ===================================================
+        // PRODUCT DETAIL
+        // ===================================================
         public async Task<IActionResult> Detail(int id)
         {
             if (id <= 0) return NotFound();
@@ -58,9 +96,9 @@ namespace EyelixEyewear_Project.Controllers
                 return NotFound();
             }
 
-            // Lấy sản phẩm liên quan (cũng cần Reviews)
+            // Lấy sản phẩm liên quan
             var relatedProducts = await _context.Products
-                .Include(p => p.Reviews)  // ← THÊM DÒNG NÀY
+                .Include(p => p.Reviews)
                 .Where(p => p.CategoryId == product.CategoryId && p.Id != id && p.IsActive)
                 .Take(4)
                 .ToListAsync();
@@ -164,6 +202,9 @@ namespace EyelixEyewear_Project.Controllers
             return Json(new { hasReviewed = hasReviewed });
         }
 
+        // ==========================================
+        // SEARCH PRODUCTS
+        // ==========================================
         [HttpGet]
         public async Task<IActionResult> SearchProducts(string query)
         {
@@ -189,4 +230,4 @@ namespace EyelixEyewear_Project.Controllers
             return Json(new { success = true, products = products });
         }
     }
-    }
+}

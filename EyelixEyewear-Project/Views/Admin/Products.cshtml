@@ -147,15 +147,18 @@
                         }
                     </select>
                 </div>
+                   
                 <div class="form-group">
-                    <label>Gender</label>
-                    <select id="productGender">
-                        <option value="">Select</option>
-                        <option value="Unisex">Unisex</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
+                    <label>Collection</label>
+                    <select id="productCollection">
+                        <option value="">None</option>
+                        @foreach (var col in ViewBag.Collections as List<EyelixEyewear_Project.Models.Collection>)
+                        {
+                            <option value="@col.Id">@col.Name</option>
+                        }
                     </select>
                 </div>
+
                 <div class="form-group">
                     <label>Color</label>
                     <input type="text" id="productColor" placeholder="e.g. Black, Tortoise">
@@ -233,7 +236,9 @@
 
 @section Scripts {
     <script>
-        // Filter products
+        // ==========================================
+        // FILTER PRODUCTS
+        // ==========================================
         function filterProducts() {
             const searchTerm = document.getElementById('searchProduct').value.toLowerCase();
             const filterCat = document.getElementById('filterCategory').value;
@@ -259,20 +264,38 @@
             });
         }
 
-        // Open modal for Add
+        // ==========================================
+        // OPEN MODAL FOR ADD
+        // ==========================================
         function openProductModal() {
             document.getElementById('productModalTitle').innerText = 'Add New Product';
             document.getElementById('productForm').reset();
             document.getElementById('productId').value = '0';
             document.getElementById('productIsActive').checked = true;
+
+            // Reset image preview
+            document.getElementById('productImageUrl').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('previewImg').src = '';
+            document.getElementById('uploadStatus').innerText = '';
+
+            // Reset collection
+            document.getElementById('productCollection').value = '';
+
             document.getElementById('productModal').classList.add('active');
         }
 
-        // Open modal for Edit
+        // ==========================================
+        // OPEN MODAL FOR EDIT
+        // ==========================================
         function editProduct(id) {
+            console.log('Editing product ID:', id);
+
             fetch(`/Admin/GetProduct?id=${id}`)
                 .then(response => response.json())
                 .then(data => {
+                    console.log('Product data received:', data);
+
                     document.getElementById('productModalTitle').innerText = 'Edit Product';
                     document.getElementById('productId').value = data.id;
                     document.getElementById('productName').value = data.name;
@@ -281,25 +304,40 @@
                     document.getElementById('productDiscountPrice').value = data.discountPrice || '';
                     document.getElementById('productStock').value = data.stock;
                     document.getElementById('productCategory').value = data.categoryId;
-                    document.getElementById('productGender').value = data.gender || '';
+
+                    // ✅ SET COLLECTION VALUE
+                    const collectionSelect = document.getElementById('productCollection');
+                    collectionSelect.value = data.collectionId || '';
+                    console.log('Collection set to:', collectionSelect.value);
+
                     document.getElementById('productColor').value = data.color || '';
                     document.getElementById('productFrameMaterial').value = data.frameMaterial || '';
                     document.getElementById('productLensMaterial').value = data.lensMaterial || '';
                     document.getElementById('productFrameShape').value = data.frameShape || '';
-                    document.getElementById('productImageUrl').value = data.imageUrl || '';
                     document.getElementById('productDescription').value = data.description || '';
                     document.getElementById('productIsActive').checked = data.isActive;
+
+                    // Set image
+                    document.getElementById('productImageUrl').value = data.imageUrl || '';
+                    if (data.imageUrl) {
+                        document.getElementById('previewImg').src = data.imageUrl;
+                        document.getElementById('imagePreview').style.display = 'block';
+                    } else {
+                        document.getElementById('imagePreview').style.display = 'none';
+                    }
+                    document.getElementById('uploadStatus').innerText = '';
 
                     document.getElementById('productModal').classList.add('active');
                 })
                 .catch(error => {
                     alert('Error loading product data');
-                    console.error(error);
+                    console.error('Error:', error);
                 });
         }
 
-
-        // Upload image
+        // ==========================================
+        // UPLOAD IMAGE
+        // ==========================================
         function uploadImage() {
             const fileInput = document.getElementById('productImageFile');
             const file = fileInput.files[0];
@@ -322,18 +360,11 @@
             .then(response => response.json())
             .then(result => {
                 if (result.success) {
-                    // Lưu URL vào hidden input
                     document.getElementById('productImageUrl').value = result.imageUrl;
-
-                    // Hiển thị preview
                     document.getElementById('previewImg').src = result.imageUrl;
                     document.getElementById('imagePreview').style.display = 'block';
-
-                    // Update status
                     document.getElementById('uploadStatus').innerText = 'Upload successful!';
                     document.getElementById('uploadStatus').style.color = '#4caf50';
-
-                    // Clear file input
                     fileInput.value = '';
                 } else {
                     alert(result.message);
@@ -348,7 +379,9 @@
             });
         }
 
-        // Remove image
+        // ==========================================
+        // REMOVE IMAGE
+        // ==========================================
         function removeImage() {
             if (!confirm('Remove this image?')) return;
 
@@ -358,64 +391,15 @@
             document.getElementById('uploadStatus').innerText = '';
         }
 
-        // Update editProduct function để hiển thị ảnh khi edit
-        function editProduct(id) {
-            fetch(`/Admin/GetProduct?id=${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('productModalTitle').innerText = 'Edit Product';
-                    document.getElementById('productId').value = data.id;
-                    document.getElementById('productName').value = data.name;
-                    document.getElementById('productSKU').value = data.sku;
-                    document.getElementById('productPrice').value = data.price;
-                    document.getElementById('productDiscountPrice').value = data.discountPrice || '';
-                    document.getElementById('productStock').value = data.stock;
-                    document.getElementById('productCategory').value = data.categoryId;
-                    document.getElementById('productGender').value = data.gender || '';
-                    document.getElementById('productColor').value = data.color || '';
-                    document.getElementById('productFrameMaterial').value = data.frameMaterial || '';
-                    document.getElementById('productLensMaterial').value = data.lensMaterial || '';
-                    document.getElementById('productFrameShape').value = data.frameShape || '';
-                    document.getElementById('productDescription').value = data.description || '';
-                    document.getElementById('productIsActive').checked = data.isActive;
-
-                    // ← THÊM PHẦN NÀY: Hiển thị ảnh hiện tại
-                    document.getElementById('productImageUrl').value = data.imageUrl || '';
-                    if (data.imageUrl) {
-                        document.getElementById('previewImg').src = data.imageUrl;
-                        document.getElementById('imagePreview').style.display = 'block';
-                    } else {
-                        document.getElementById('imagePreview').style.display = 'none';
-                    }
-                    document.getElementById('uploadStatus').innerText = '';
-
-                    document.getElementById('productModal').classList.add('active');
-                })
-                .catch(error => {
-                    alert('Error loading product data');
-                    console.error(error);
-                });
-        }
-
-        // Update openProductModal để reset image preview
-        function openProductModal() {
-            document.getElementById('productModalTitle').innerText = 'Add New Product';
-            document.getElementById('productForm').reset();
-            document.getElementById('productId').value = '0';
-            document.getElementById('productIsActive').checked = true;
-
-            // ← THÊM PHẦN NÀY: Reset image preview
-            document.getElementById('imagePreview').style.display = 'none';
-            document.getElementById('uploadStatus').innerText = '';
-
-            document.getElementById('productModal').classList.add('active');
-        }
-
-        // Save product (Add or Edit)
+        // ==========================================
+        // SAVE PRODUCT
+        // ==========================================
         function saveProduct(event) {
             event.preventDefault();
 
             const id = document.getElementById('productId').value;
+            const collectionValue = document.getElementById('productCollection').value;
+
             const data = {
                 id: parseInt(id),
                 name: document.getElementById('productName').value,
@@ -424,15 +408,19 @@
                 discountPrice: document.getElementById('productDiscountPrice').value || null,
                 stock: parseInt(document.getElementById('productStock').value),
                 categoryId: parseInt(document.getElementById('productCategory').value),
-                gender: document.getElementById('productGender').value,
-                color: document.getElementById('productColor').value,
-                frameMaterial: document.getElementById('productFrameMaterial').value,
-                lensMaterial: document.getElementById('productLensMaterial').value,
-                frameShape: document.getElementById('productFrameShape').value,
-                imageUrl: document.getElementById('productImageUrl').value,
-                description: document.getElementById('productDescription').value,
+                collectionId: collectionValue ? parseInt(collectionValue) : null,
+                color: document.getElementById('productColor').value || null,
+                frameMaterial: document.getElementById('productFrameMaterial').value || null,
+                lensMaterial: document.getElementById('productLensMaterial').value || null,
+                frameShape: document.getElementById('productFrameShape').value || null,
+                imageUrl: document.getElementById('productImageUrl').value || null,
+                description: document.getElementById('productDescription').value || null,
                 isActive: document.getElementById('productIsActive').checked
             };
+
+            // Debug log
+            console.log('Saving product with data:', data);
+            console.log('CollectionId:', data.collectionId);
 
             const url = id === '0' ? '/Admin/AddProduct' : '/Admin/EditProduct';
 
@@ -443,6 +431,7 @@
             })
             .then(response => response.json())
             .then(result => {
+                console.log('Save result:', result);
                 if (result.success) {
                     alert(result.message);
                     closeModal('productModal');
@@ -453,11 +442,13 @@
             })
             .catch(error => {
                 alert('Error saving product');
-                console.error(error);
+                console.error('Error:', error);
             });
         }
 
-        // Toggle Active/Inactive
+        // ==========================================
+        // TOGGLE PRODUCT STATUS
+        // ==========================================
         function toggleProductStatus(id) {
             if (!confirm('Toggle product status?')) return;
 
@@ -477,7 +468,9 @@
             });
         }
 
-        // Delete product
+        // ==========================================
+        // DELETE PRODUCT
+        // ==========================================
         function deleteProduct(id) {
             if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
 
@@ -497,7 +490,9 @@
             });
         }
 
-        // Close modal
+        // ==========================================
+        // CLOSE MODAL
+        // ==========================================
         function closeModal(id) {
             document.getElementById(id).classList.remove('active');
         }

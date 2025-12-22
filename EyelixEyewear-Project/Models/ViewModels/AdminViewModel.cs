@@ -54,7 +54,7 @@ namespace EyelixEyewear_Project.Models.ViewModels
 
         [Required(ErrorMessage = "Product name is required")]
         [MaxLength(200)]
-        public string Name { get; set; }
+        public string Name { get; set; } 
 
         [Required(ErrorMessage = "SKU is required")]
         public string SKU { get; set; }
@@ -72,18 +72,15 @@ namespace EyelixEyewear_Project.Models.ViewModels
         public int Stock { get; set; }
 
         public string ImageUrl { get; set; }
-
-        // ← THÊM FIELD NÀY CHO UPLOAD
         public IFormFile ImageFile { get; set; }
-
         public string FrameMaterial { get; set; }
         public string LensMaterial { get; set; }
         public string FrameShape { get; set; }
-        public string Gender { get; set; }
         public string Color { get; set; }
 
         [Required(ErrorMessage = "Category is required")]
         public int CategoryId { get; set; }
+        public int? CollectionId { get; set; }  
 
         public bool IsActive { get; set; } = true;
 

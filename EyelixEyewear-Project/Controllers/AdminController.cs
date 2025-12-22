@@ -11,7 +11,7 @@ using System.Security.Claims;
 
 namespace EyelixEyewear_Project.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = "Admin", Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -21,11 +21,11 @@ namespace EyelixEyewear_Project.Controllers
             _context = context;
         }
 
-        // ==========================================
-        // 0. LOGIN PAGE (Trang đăng nhập Admin)
-        // ==========================================
+        // ==============
+        // 0. LOGIN PAGE 
+        // ==============
         [HttpGet]
-        [AllowAnonymous] // Cho phép chưa đăng nhập được vào trang này
+        [AllowAnonymous] 
         public IActionResult Login()
         {
             if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
@@ -54,10 +54,21 @@ namespace EyelixEyewear_Project.Controllers
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, user.Username),
-                    new Claim(ClaimTypes.Role, user.Role) // Lưu Role Admin vào Cookie
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Role, user.Role),
+                    new Claim("FullName", user.FullName)
                 };
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+                var claimsIdentity = new ClaimsIdentity(claims, "Admin");
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = false,
+                    ExpiresUtc = DateTime.UtcNow.AddHours(8)
+                };
+
+                await HttpContext.SignInAsync(
+                     "Admin",
+                     new ClaimsPrincipal(claimsIdentity),
+                     authProperties);
 
                 return Json(new { success = true, message = "Login successful" });
             }
@@ -71,7 +82,7 @@ namespace EyelixEyewear_Project.Controllers
         [HttpGet]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync("Admin");
             return RedirectToAction("Login", "Admin");
         }
 
@@ -332,6 +343,7 @@ namespace EyelixEyewear_Project.Controllers
                 })
                 .ToList();
             ViewBag.Categories = _context.Categories.Where(c => c.IsActive).ToList();
+            ViewBag.Collections = _context.Collections.Where(c => c.IsActive).ToList();
             return View(products);
         }
 
@@ -361,7 +373,9 @@ namespace EyelixEyewear_Project.Controllers
         [HttpGet]
         public IActionResult GetProduct(int id)
         {
-            var product = _context.Products.Find(id);
+            var product = _context.Products
+            .AsNoTracking()
+            .FirstOrDefault(p => p.Id == id);
             if (product == null)
             {
                 return NotFound();
@@ -382,13 +396,14 @@ namespace EyelixEyewear_Project.Controllers
                 frameShape = product.FrameShape,
                 color = product.Color,
                 categoryId = product.CategoryId,
+                collectionId = product.CollectionId,
                 isActive = product.IsActive
             });
         }
 
-        // ==========================================
-        // 8. ADD PRODUCT (AJAX - JSON)
-        // ==========================================
+        // ================
+        // 8. ADD PRODUCT 
+        // ================
         [HttpPost]
         public IActionResult AddProduct([FromBody] ProductFormViewModel model)
         {
@@ -414,6 +429,7 @@ namespace EyelixEyewear_Project.Controllers
                     FrameShape = model.FrameShape,
                     Color = model.Color,
                     CategoryId = model.CategoryId,
+                    CollectionId = model.CollectionId,
                     IsActive = model.IsActive,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -429,9 +445,9 @@ namespace EyelixEyewear_Project.Controllers
             }
         }
 
-        // ==========================================
-        // 9. EDIT PRODUCT (AJAX - JSON)
-        // ==========================================
+        // ==================
+        // 9. EDIT PRODUCT 
+        // ==================
         [HttpPost]
         public IActionResult EditProduct([FromBody] ProductFormViewModel model)
         {
@@ -443,12 +459,13 @@ namespace EyelixEyewear_Project.Controllers
                     return Json(new { success = false, message = "Product not found" });
                 }
 
-                // Check SKU duplicate (exclude current product)
+                // Check SKU duplicate
                 if (_context.Products.Any(p => p.SKU == model.SKU && p.Id != model.Id))
                 {
                     return Json(new { success = false, message = "SKU already exists" });
                 }
 
+                // Update ALL fields - không để EF tự detect
                 product.Name = model.Name;
                 product.SKU = model.SKU;
                 product.Description = model.Description;
@@ -461,8 +478,12 @@ namespace EyelixEyewear_Project.Controllers
                 product.FrameShape = model.FrameShape;
                 product.Color = model.Color;
                 product.CategoryId = model.CategoryId;
+                product.CollectionId = model.CollectionId; // Đã có rồi
                 product.IsActive = model.IsActive;
                 product.UpdatedAt = DateTime.UtcNow;
+
+                // THÊM DÒNG NÀY: Force EF mark entity as modified
+                _context.Entry(product).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
 
                 _context.SaveChanges();
 

@@ -9,13 +9,26 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Account/Login"; // Chuyển hướng về Login nếu chưa đăng nhập
-        options.AccessDeniedPath = "/Account/AccessDenied";
-        options.ExpireTimeSpan = TimeSpan.FromDays(30);
-    });
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = "Customer"; // Scheme mặc định cho trang TMĐT
+})
+.AddCookie("Customer", options =>
+{
+    options.Cookie.Name = "CustomerAuth";
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromDays(30);
+    options.SlidingExpiration = true;
+})
+.AddCookie("Admin", options =>
+{
+    options.Cookie.Name = "AdminAuth";
+    options.LoginPath = "/Admin/Login";
+    options.AccessDeniedPath = "/Admin/Login";
+    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    options.SlidingExpiration = true;
+});
 
 // 3. Add services
 builder.Services.AddControllersWithViews();
@@ -25,23 +38,32 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
 var app = builder.Build();
 
-// 4. Configure Pipeline (Thứ tự rất quan trọng)
+// 4. Configure Pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseRouting(); // Chỉ gọi 1 lần
+app.UseRouting();
 
-app.UseSession(); // Session phải đặt trước Auth
-app.UseAuthentication(); // Kích hoạt tính năng đăng nhập
-app.UseAuthorization();  // Kích hoạt phân quyền
+app.UseSession();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapStaticAssets();
+
+// ← THÊM ROUTE CHO COLLECTION (Đặt TRƯỚC route default)
+app.MapControllerRoute(
+    name: "collection",
+    pattern: "collection/{slug}",
+    defaults: new { controller = "Product", action = "Collection" }
+);
 
 app.MapControllerRoute(
     name: "admin",
@@ -55,4 +77,3 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 app.Run();
-
