@@ -7,12 +7,12 @@
 
     const itemsToShow = window.innerWidth > 768 ? 3 : 1;
     const itemWidth = 100 / itemsToShow;
-    const transitionSpeed = 500; 
+    const transitionSpeed = 500;
 
 
     originalItems.forEach(item => {
         item.style.width = `${itemWidth}%`;
-        item.style.flex = `0 0 ${itemWidth}%`; 
+        item.style.flex = `0 0 ${itemWidth}%`;
     });
 
     // CLONE ONE-WAY
@@ -26,7 +26,7 @@
         }
     }
 
-    let currentIndex = 0; 
+    let currentIndex = 0;
     let isTransitioning = false;
     // Cập nhật lại danh sách (bao gồm cả clone vừa thêm)
     const allItems = document.querySelectorAll('.product-slide-item');

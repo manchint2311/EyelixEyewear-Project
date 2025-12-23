@@ -14,8 +14,9 @@
     --transition: all 0.3s ease;
 }
 
-.product-detail {
-    padding: 80px 0;
+..product-detail {
+    padding-top: 20px; 
+    padding-bottom: 80px;
 }
 
 .product-wrapper {
@@ -760,5 +761,156 @@
 
     .tab-buttons {
         overflow-x: auto;
+    }
+}
+/* ==========================================
+   BREADCRUMB NAVIGATION - STYLE MỚI
+   ========================================== */
+
+.breadcrumb-nav {
+    background: #ffffff;
+    padding: 15px 0 5px 0;
+    margin-bottom: 10px;
+    margin-top: 100px;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+    gap: 5px; 
+}
+
+    .breadcrumb li {
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        color: #333;
+        line-height: 1.5;
+    }
+
+        .breadcrumb li a {
+            color: #333; 
+            text-decoration: none;
+            transition: color 0.2s ease;
+            font-weight: 400; 
+        }
+
+            .breadcrumb li a:hover {
+                color: #f08438;
+                text-decoration: underline;
+            }
+
+        .breadcrumb li span {
+            color: #999; 
+            margin: 0 6px; 
+            font-size: 12px;
+        }
+
+        .breadcrumb li.active {
+            color: #666; 
+            font-weight: 400;
+            pointer-events: none; 
+        }
+
+/* =================
+   SHIPPING TABLE
+   ================= */
+
+.shipping-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+    .shipping-table thead th {
+        background: #f5f5f5;
+        text-align: left;
+        padding: 15px;
+        font-weight: 600;
+        color: #333;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+        .shipping-table thead th:first-child {
+            border-radius: 8px 0 0 0;
+        }
+
+        .shipping-table thead th:last-child {
+            border-radius: 0 8px 0 0;
+        }
+
+    .shipping-table tbody tr {
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+        .shipping-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+    .shipping-table tbody td {
+        padding: 15px;
+        vertical-align: top;
+    }
+
+.zone-label {
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+}
+
+.shipping-option {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+    .shipping-option:last-child {
+        margin-bottom: 0;
+    }
+
+    .shipping-option strong {
+        color: #333;
+        font-weight: 600;
+    }
+
+    .shipping-option .percentage {
+        color: #999;
+        font-size: 13px;
+    }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .breadcrumb-nav {
+        padding: 15px 0;
+        margin-bottom: 20px;
+    }
+
+    .breadcrumb {
+        font-size: 13px;
+        gap: 6px;
+    }
+
+        .breadcrumb li span {
+            margin: 0 6px;
+        }
+
+    .shipping-table {
+        font-size: 14px;
+    }
+
+        .shipping-table thead th,
+        .shipping-table tbody td {
+            padding: 12px 10px;
+        }
+
+    .zone-label {
+        min-width: 80px;
+    }
+
+    .shipping-option {
+        font-size: 13px;
     }
 }

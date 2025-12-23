@@ -83,6 +83,8 @@ namespace EyelixEyewear_Project.Models.ViewModels
         public int? CollectionId { get; set; }  
 
         public bool IsActive { get; set; } = true;
+        public List<string> GalleryImages { get; set; } = new List<string>();
+
 
         // For dropdown
         public List<Category> Categories { get; set; } = new List<Category>();

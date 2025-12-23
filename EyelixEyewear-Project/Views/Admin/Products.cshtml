@@ -4,6 +4,47 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
+<style>
+    /* Gallery Preview Styles */
+    .gallery-item {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 2px solid #ddd;
+    }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .gallery-item-remove {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+
+        .gallery-item-remove:hover {
+            background: #c82333;
+            transform: scale(1.1);
+        }
+</style>
+
 <header>
     <h2>Products Management</h2>
     <div class="search-wrapper">
@@ -101,7 +142,7 @@
 
 <!-- MODAL: Add/Edit Product -->
 <div class="modal" id="productModal">
-    <div class="modal-content" style="max-width: 900px;">
+    <div class="modal-content" style="max-width: 1000px;">
         <span class="close-modal" onclick="closeModal('productModal')">&times;</span>
         <div class="modal-header">
             <h2 id="productModalTitle">Add New Product</h2>
@@ -147,7 +188,7 @@
                         }
                     </select>
                 </div>
-                   
+
                 <div class="form-group">
                     <label>Collection</label>
                     <select id="productCollection">
@@ -180,34 +221,55 @@
                 </div>
             </div>
 
+            <!-- MAIN PRODUCT IMAGE -->
             <div class="form-group">
-                <label>Product Image</label>
+                <label>Main Product Image *</label>
 
-                <!-- Preview ảnh -->
                 <div id="imagePreview" style="margin-bottom: 15px; display: none;">
                     <img id="previewImg" src="" alt="Preview"
                          style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid #ddd;">
-                    <button type="button" onclick="removeImage()"
+                    <button type="button" onclick="removeMainImage()"
                             style="display: block; margin-top: 10px; padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">
                         <i class="fas fa-trash"></i> Remove Image
                     </button>
                 </div>
 
-                <!-- Upload button -->
                 <div style="display: flex; gap: 10px; align-items: center;">
-                    <input type="file" id="productImageFile" accept="image/*" style="display: none;" onchange="uploadImage()">
+                    <input type="file" id="productImageFile" accept="image/*" style="display: none;" onchange="uploadMainImage()">
                     <button type="button" onclick="document.getElementById('productImageFile').click()"
                             class="btn-main" style="padding: 10px 20px;">
-                        <i class="fas fa-upload"></i> Upload Image
+                        <i class="fas fa-upload"></i> Upload Main Image
                     </button>
                     <span id="uploadStatus" style="color: #999; font-size: 14px;"></span>
                 </div>
 
-                <!-- Hidden input chứa URL -->
                 <input type="hidden" id="productImageUrl">
+                <small style="color: #777; font-size: 13px; display: block; margin-top: 10px;">
+                    This image will be displayed as the main product image
+                </small>
+            </div>
+
+            <!-- GALLERY IMAGES -->
+            <div class="form-group">
+                <label>Additional Images (Gallery)</label>
+
+                <!-- Gallery Preview -->
+                <div id="galleryPreview" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                    <!-- Gallery images will be added here dynamically -->
+                </div>
+
+                <!-- Upload Gallery Button -->
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="file" id="galleryImageFile" accept="image/*" multiple style="display: none;" onchange="uploadGalleryImages()">
+                    <button type="button" onclick="document.getElementById('galleryImageFile').click()"
+                            class="btn-main" style="padding: 10px 20px; background: #28a745;">
+                        <i class="fas fa-images"></i> Add Gallery Images
+                    </button>
+                    <span id="galleryUploadStatus" style="color: #999; font-size: 14px;"></span>
+                </div>
 
                 <small style="color: #777; font-size: 13px; display: block; margin-top: 10px;">
-                    Allowed: JPG, PNG, GIF, WEBP (Max 5MB)
+                    You can upload multiple images. These will be shown in the product gallery.
                 </small>
             </div>
 
@@ -234,8 +296,12 @@
     </div>
 </div>
 
+
 @section Scripts {
     <script>
+        // Store gallery images URLs
+        let galleryImages = [];
+
         // ==========================================
         // FILTER PRODUCTS
         // ==========================================
@@ -273,15 +339,18 @@
             document.getElementById('productId').value = '0';
             document.getElementById('productIsActive').checked = true;
 
-            // Reset image preview
+            // Reset images
             document.getElementById('productImageUrl').value = '';
             document.getElementById('imagePreview').style.display = 'none';
             document.getElementById('previewImg').src = '';
             document.getElementById('uploadStatus').innerText = '';
 
-            // Reset collection
-            document.getElementById('productCollection').value = '';
+            // Reset gallery
+            galleryImages = [];
+            document.getElementById('galleryPreview').innerHTML = '';
+            document.getElementById('galleryUploadStatus').innerText = '';
 
+            document.getElementById('productCollection').value = '';
             document.getElementById('productModal').classList.add('active');
         }
 
@@ -289,13 +358,9 @@
         // OPEN MODAL FOR EDIT
         // ==========================================
         function editProduct(id) {
-            console.log('Editing product ID:', id);
-
             fetch(`/Admin/GetProduct?id=${id}`)
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Product data received:', data);
-
                     document.getElementById('productModalTitle').innerText = 'Edit Product';
                     document.getElementById('productId').value = data.id;
                     document.getElementById('productName').value = data.name;
@@ -304,12 +369,7 @@
                     document.getElementById('productDiscountPrice').value = data.discountPrice || '';
                     document.getElementById('productStock').value = data.stock;
                     document.getElementById('productCategory').value = data.categoryId;
-
-                    // ✅ SET COLLECTION VALUE
-                    const collectionSelect = document.getElementById('productCollection');
-                    collectionSelect.value = data.collectionId || '';
-                    console.log('Collection set to:', collectionSelect.value);
-
+                    document.getElementById('productCollection').value = data.collectionId || '';
                     document.getElementById('productColor').value = data.color || '';
                     document.getElementById('productFrameMaterial').value = data.frameMaterial || '';
                     document.getElementById('productLensMaterial').value = data.lensMaterial || '';
@@ -317,7 +377,7 @@
                     document.getElementById('productDescription').value = data.description || '';
                     document.getElementById('productIsActive').checked = data.isActive;
 
-                    // Set image
+                    // Set main image
                     document.getElementById('productImageUrl').value = data.imageUrl || '';
                     if (data.imageUrl) {
                         document.getElementById('previewImg').src = data.imageUrl;
@@ -325,8 +385,21 @@
                     } else {
                         document.getElementById('imagePreview').style.display = 'none';
                     }
-                    document.getElementById('uploadStatus').innerText = '';
 
+                    // Load gallery images
+                    galleryImages = [];
+                    const galleryPreview = document.getElementById('galleryPreview');
+                    galleryPreview.innerHTML = '';
+
+                    if (data.galleryImages && data.galleryImages.length > 0) {
+                        data.galleryImages.forEach(img => {
+                            galleryImages.push(img.url);
+                            addGalleryPreview(img.url, img.id);
+                        });
+                    }
+
+                    document.getElementById('uploadStatus').innerText = '';
+                    document.getElementById('galleryUploadStatus').innerText = '';
                     document.getElementById('productModal').classList.add('active');
                 })
                 .catch(error => {
@@ -336,23 +409,20 @@
         }
 
         // ==========================================
-        // UPLOAD IMAGE
+        // UPLOAD MAIN IMAGE
         // ==========================================
-        function uploadImage() {
+        function uploadMainImage() {
             const fileInput = document.getElementById('productImageFile');
             const file = fileInput.files[0];
 
             if (!file) return;
 
-            // Show loading
             document.getElementById('uploadStatus').innerText = 'Uploading...';
             document.getElementById('uploadStatus').style.color = '#667eea';
 
-            // Create FormData
             const formData = new FormData();
             formData.append('file', file);
 
-            // Upload
             fetch('/Admin/UploadProductImage', {
                 method: 'POST',
                 body: formData
@@ -380,10 +450,122 @@
         }
 
         // ==========================================
-        // REMOVE IMAGE
+        // UPLOAD GALLERY IMAGES
         // ==========================================
-        function removeImage() {
-            if (!confirm('Remove this image?')) return;
+        function uploadGalleryImages() {
+            const fileInput = document.getElementById('galleryImageFile');
+            const files = fileInput.files;
+
+            if (!files || files.length === 0) return;
+
+            document.getElementById('galleryUploadStatus').innerText = `Uploading ${files.length} image(s)...`;
+            document.getElementById('galleryUploadStatus').style.color = '#667eea';
+
+            let uploadedCount = 0;
+            let failedCount = 0;
+
+            Array.from(files).forEach(file => {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/Admin/UploadProductImage', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        galleryImages.push(result.imageUrl);
+                        addGalleryPreview(result.imageUrl);
+                        uploadedCount++;
+                    } else {
+                        failedCount++;
+                    }
+
+                    // Update status when all uploads complete
+                    if (uploadedCount + failedCount === files.length) {
+                        if (failedCount === 0) {
+                            document.getElementById('galleryUploadStatus').innerText =
+                                `${uploadedCount} image(s) uploaded successfully!`;
+                            document.getElementById('galleryUploadStatus').style.color = '#4caf50';
+                        } else {
+                            document.getElementById('galleryUploadStatus').innerText =
+                                `${uploadedCount} uploaded, ${failedCount} failed`;
+                            document.getElementById('galleryUploadStatus').style.color = '#ff9800';
+                        }
+                        fileInput.value = '';
+                    }
+                })
+                .catch(error => {
+                    failedCount++;
+                    console.error('Upload error:', error);
+                });
+            });
+        }
+
+        // ==========================================
+        // ADD GALLERY PREVIEW
+        // ==========================================
+        function addGalleryPreview(imageUrl, imageId = null) {
+            const galleryPreview = document.getElementById('galleryPreview');
+            const index = galleryImages.length - 1;
+
+            const galleryItem = document.createElement('div');
+            galleryItem.className = 'gallery-item';
+            galleryItem.dataset.imageId = imageId || '';
+            galleryItem.innerHTML = `
+                <img src="${imageUrl}" alt="Gallery Image">
+                <button type="button" class="gallery-item-remove"
+                        onclick="removeGalleryImage(${index}, ${imageId || 'null'})">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            galleryPreview.appendChild(galleryItem);
+        }
+
+        // ==========================================
+        // REMOVE GALLERY IMAGE
+        // ==========================================
+        function removeGalleryImage(index, imageId) {
+            if (!confirm('Remove this image from gallery?')) return;
+
+            // If editing existing product with saved image
+            if (imageId) {
+                fetch('/Admin/DeleteGalleryImage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `imageId=${imageId}`
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        removeGalleryPreviewItem(index);
+                    } else {
+                        alert(result.message);
+                    }
+                });
+            } else {
+                removeGalleryPreviewItem(index);
+            }
+        }
+
+        function removeGalleryPreviewItem(index) {
+            galleryImages.splice(index, 1);
+
+            // Rebuild gallery preview
+            const galleryPreview = document.getElementById('galleryPreview');
+            galleryPreview.innerHTML = '';
+
+            galleryImages.forEach((url, idx) => {
+                addGalleryPreview(url);
+            });
+        }
+
+        // ==========================================
+        // REMOVE MAIN IMAGE
+        // ==========================================
+        function removeMainImage() {
+            if (!confirm('Remove main product image?')) return;
 
             document.getElementById('productImageUrl').value = '';
             document.getElementById('imagePreview').style.display = 'none';
@@ -415,12 +597,11 @@
                 frameShape: document.getElementById('productFrameShape').value || null,
                 imageUrl: document.getElementById('productImageUrl').value || null,
                 description: document.getElementById('productDescription').value || null,
-                isActive: document.getElementById('productIsActive').checked
+                isActive: document.getElementById('productIsActive').checked,
+                galleryImages: galleryImages
             };
 
-            // Debug log
-            console.log('Saving product with data:', data);
-            console.log('CollectionId:', data.collectionId);
+            console.log('Saving product:', data);
 
             const url = id === '0' ? '/Admin/AddProduct' : '/Admin/EditProduct';
 
@@ -431,7 +612,6 @@
             })
             .then(response => response.json())
             .then(result => {
-                console.log('Save result:', result);
                 if (result.success) {
                     alert(result.message);
                     closeModal('productModal');

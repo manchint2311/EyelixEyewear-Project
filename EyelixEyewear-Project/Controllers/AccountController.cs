@@ -20,7 +20,7 @@ namespace EyelixEyewear_Project.Controllers
             _context = context;
         }
 
-        // ================= ĐĂNG KÝ =================
+        // SIGNUP
         [HttpGet]
         public IActionResult Signup()
         {
@@ -39,7 +39,7 @@ namespace EyelixEyewear_Project.Controllers
                     return View(model);
                 }
 
-                // 2. Tạo user mới 
+                // tạo users
                 var newUser = new AppUser
                 {
                     FullName = model.FullName,
@@ -65,7 +65,7 @@ namespace EyelixEyewear_Project.Controllers
             return View(model);
         }
 
-        // ================= LOGIN =================
+        // login
         [HttpGet]
         public IActionResult Login()
         {
@@ -78,19 +78,9 @@ namespace EyelixEyewear_Project.Controllers
         {
             if (ModelState.IsValid)
             {
-                // 1. Tìm user trong DB
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == model.Username);
-
-                // 2. Kiểm tra password 
                 if (user != null && PasswordHelper.VerifyPassword(model.Password, user.PasswordHash))
                 {
-                    if (!user.IsActive)
-                    {
-                        ModelState.AddModelError("", "Your account has been locked.");
-                        return View(model);
-                    }
-
-                    // 3. Tạo Claims (Thông tin phiên đăng nhập)
                     var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Name, user.Username),
@@ -119,33 +109,32 @@ namespace EyelixEyewear_Project.Controllers
             return View(model);
         }
 
-        // ================= ĐĂNG XUẤT (LOGOUT) =================
+        // logout
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync("Customer");
             return RedirectToAction("Login");
         }
 
-        // ================= PROFILE DASHBOARD =================
+        // PROFILE DASHBOARD 
         [Authorize(AuthenticationSchemes = "Customer")] 
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
-            // 1. Lấy ID user đang đăng nhập
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login");
 
             int userId = int.Parse(userIdStr);
 
-            // 2. Lấy thông tin User + Đơn hàng từ DB
+            //Lấy thông tin User + Đơn hàng từ DB
             var user = await _context.Users
                 .Include(u => u.Orders)
-                    .ThenInclude(o => o.OrderDetails) // Load chi tiết đơn để tính toán nếu cần
+                    .ThenInclude(o => o.OrderDetails)
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user == null) return RedirectToAction("Login");
 
-            // 3. Đổ dữ liệu vào ViewModel
+            // Đổ dữ liệu vào ViewModel
             var model = new UserProfileViewModel
             {
                 FullName = user.FullName,
@@ -153,7 +142,7 @@ namespace EyelixEyewear_Project.Controllers
                 Email = user.Email,
                 Phone = user.PhoneNumber ?? "",
                 Address = user.Address ?? "",
-                Orders = user.Orders.OrderByDescending(o => o.OrderDate).ToList() // Đơn mới nhất lên đầu
+                Orders = user.Orders.OrderByDescending(o => o.OrderDate).ToList() 
             };
 
             return View(model);
@@ -169,7 +158,7 @@ namespace EyelixEyewear_Project.Controllers
 
             if (user == null) return RedirectToAction("Login");
 
-            // Load lại danh sách đơn hàng để hiển thị nếu có lỗi (vì Orders không được submit qua form)
+            // Load lại danh sách đơn hàng để hiển thị nếu có lỗi 
             model.Orders = await _context.Orders
                 .Where(o => o.UserId == userId)
                 .OrderByDescending(o => o.OrderDate)
@@ -177,24 +166,21 @@ namespace EyelixEyewear_Project.Controllers
 
             if (ModelState.IsValid)
             {
-                // 1. Cập nhật thông tin cơ bản
+                //update thông tin cá nhân
                 user.FullName = model.FullName;
                 user.PhoneNumber = model.Phone;
                 user.Address = model.Address;
-                // Email và Username thường không cho đổi tùy tiện để tránh lỗi hệ thống
 
-                // 2. Xử lý đổi mật khẩu (Nếu có nhập)
+                // change password 
                 if (!string.IsNullOrEmpty(model.CurrentPassword) && !string.IsNullOrEmpty(model.NewPassword))
                 {
-                    // Kiểm tra mật khẩu cũ
+                    // check previous password
                     if (!PasswordHelper.VerifyPassword(model.CurrentPassword, user.PasswordHash))
                     {
                         ModelState.AddModelError("CurrentPassword", "The current password is incorrect.");
                         TempData["ErrorMessage"] = "Update failed: Incorrect old password.";
                         return View("Profile", model);
                     }
-
-                    // Đổi sang mật khẩu mới
                     user.PasswordHash = PasswordHelper.HashPassword(model.NewPassword);
                 }
 
@@ -209,7 +195,7 @@ namespace EyelixEyewear_Project.Controllers
             return View("Profile", model);
         }
 
-        // ================= FORGOT PASSWORD =================
+        // forgot password
         [HttpGet]
         public IActionResult ForgotPassword()
         {
@@ -226,7 +212,7 @@ namespace EyelixEyewear_Project.Controllers
                 return View();
             }
 
-            // Tìm user theo email
+            //tìm=email trong db
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
             if (user == null)
@@ -235,7 +221,7 @@ namespace EyelixEyewear_Project.Controllers
                 return View();
             }
 
-            // Generate password tạm thời (6 ký tự random)
+            // Generate password
             var tempPassword = GenerateRandomPassword(8);
 
             // Hash và lưu vào DB
@@ -243,14 +229,12 @@ namespace EyelixEyewear_Project.Controllers
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
 
-            // Hiển thị password tạm cho user (trong thực tế nên gửi email)
             ViewBag.TempPassword = tempPassword;
             ViewBag.UserEmail = email;
             ViewBag.Success = true;
 
             return View("ForgotPasswordSuccess");
         }
-
         // Helper method để generate random password
         private string GenerateRandomPassword(int length)
         {

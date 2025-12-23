@@ -58,12 +58,19 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
-// ← THÊM ROUTE CHO COLLECTION (Đặt TRƯỚC route default)
+app.MapControllerRoute(
+    name: "productDetail",
+    pattern: "Product/{name}",
+    defaults: new { controller = "Product", action = "Detail" }
+);
+
+// Route cho collection
 app.MapControllerRoute(
     name: "collection",
     pattern: "collection/{slug}",
     defaults: new { controller = "Product", action = "Collection" }
 );
+
 
 app.MapControllerRoute(
     name: "admin",

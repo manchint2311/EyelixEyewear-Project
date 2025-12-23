@@ -9,6 +9,7 @@ namespace EyelixEyewear_Project.Controllers
     public class ProductController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private const int PageSize = 9; // 9 products per page
 
         public ProductController(ApplicationDbContext context)
         {
@@ -16,9 +17,9 @@ namespace EyelixEyewear_Project.Controllers
         }
 
         // ===================================================
-        // PRODUCT INDEX BY CATEGORY
+        // PRODUCT INDEX BY CATEGORY WITH PAGINATION
         // ===================================================
-        public async Task<IActionResult> Index(string category)
+        public async Task<IActionResult> Index(string category, int page = 1)
         {
             var query = _context.Products
                 .Include(p => p.Category)
@@ -26,32 +27,42 @@ namespace EyelixEyewear_Project.Controllers
                 .Include(p => p.ProductVariants)
                 .Where(p => p.IsActive);
 
-            // Filter theo category
+            // Filter by category
             if (!string.IsNullOrEmpty(category))
             {
                 query = query.Where(p => p.Category.Name.ToLower() == category.ToLower());
             }
 
+            // Count total products
+            var totalProducts = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalProducts / (double)PageSize);
+
+            // Apply pagination
             var products = await query
                 .OrderByDescending(p => p.CreatedAt)
+                .Skip((page - 1) * PageSize)
+                .Take(PageSize)
                 .ToListAsync();
 
             ViewBag.CurrentCategory = category;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalProducts = totalProducts;
 
             return View(products);
         }
 
         // ===================================================
-        // COLLECTION BY SLUG - THÊM METHOD NÀY
+        // COLLECTION BY SLUG WITH PAGINATION
         // ===================================================
-        public async Task<IActionResult> Collection(string slug)
+        public async Task<IActionResult> Collection(string slug, int page = 1)
         {
             if (string.IsNullOrEmpty(slug))
             {
                 return NotFound();
             }
 
-            // 1. Tìm Collection theo slug
+            // Find collection
             var collection = await _context.Collections
                 .FirstOrDefaultAsync(c => c.Slug == slug && c.IsActive);
 
@@ -60,46 +71,57 @@ namespace EyelixEyewear_Project.Controllers
                 return NotFound();
             }
 
-            // 2. Lấy tất cả products thuộc collection này
-            var products = await _context.Products
+            // Query products in this collection
+            var query = _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Reviews)
                 .Include(p => p.ProductVariants)
-                .Where(p => p.CollectionId == collection.Id && p.IsActive)
+                .Where(p => p.CollectionId == collection.Id && p.IsActive);
+
+            // Count total
+            var totalProducts = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalProducts / (double)PageSize);
+
+            // Apply pagination
+            var products = await query
                 .OrderByDescending(p => p.CreatedAt)
+                .Skip((page - 1) * PageSize)
+                .Take(PageSize)
                 .ToListAsync();
 
-            // 3. Truyền thông tin collection vào ViewBag
+            // Pass data to view
             ViewBag.CollectionName = collection.Name;
             ViewBag.CollectionDescription = collection.Description;
             ViewBag.CollectionBanner = collection.BannerImageUrl ?? "/images/banner/default-banner.jpg";
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalProducts = totalProducts;
 
             return View(products);
         }
 
-        // ===================================================
-        // PRODUCT DETAIL
-        // ===================================================
-        public async Task<IActionResult> Detail(int id)
+        public async Task<IActionResult> Detail(string name)
         {
-            if (id <= 0) return NotFound();
+            if (string.IsNullOrEmpty(name)) return NotFound();
 
             var product = await _context.Products
                 .Include(p => p.Category)
+                .Include(p => p.Collection)
                 .Include(p => p.ProductVariants)
+                .Include(p => p.ProductImages)
                 .Include(p => p.Reviews.Where(r => r.IsApproved))
                     .ThenInclude(r => r.User)
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.Name == name && p.IsActive);
 
             if (product == null)
             {
                 return NotFound();
             }
 
-            // Lấy sản phẩm liên quan
+            // Get related products
             var relatedProducts = await _context.Products
                 .Include(p => p.Reviews)
-                .Where(p => p.CategoryId == product.CategoryId && p.Id != id && p.IsActive)
+                .Where(p => p.CategoryId == product.CategoryId && p.Id != product.Id && p.IsActive)
                 .Take(4)
                 .ToListAsync();
 
@@ -120,13 +142,11 @@ namespace EyelixEyewear_Project.Controllers
         {
             try
             {
-                // Kiểm tra đăng nhập
                 if (!User.Identity.IsAuthenticated)
                 {
                     return Json(new { success = false, message = "Please login to submit a review" });
                 }
 
-                // Lấy UserId
                 var username = User.Identity.Name;
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
@@ -135,7 +155,6 @@ namespace EyelixEyewear_Project.Controllers
                     return Json(new { success = false, message = "User not found" });
                 }
 
-                // Kiểm tra đã review chưa
                 var existingReview = await _context.Reviews
                     .FirstOrDefaultAsync(r => r.ProductId == productId && r.UserId == user.Id);
 
@@ -144,7 +163,6 @@ namespace EyelixEyewear_Project.Controllers
                     return Json(new { success = false, message = "You have already reviewed this product" });
                 }
 
-                // Validate
                 if (rating < 1 || rating > 5)
                 {
                     return Json(new { success = false, message = "Rating must be between 1 and 5" });
@@ -155,7 +173,6 @@ namespace EyelixEyewear_Project.Controllers
                     return Json(new { success = false, message = "Review must be at least 10 characters" });
                 }
 
-                // Tạo review mới
                 var review = new Review
                 {
                     ProductId = productId,
@@ -163,7 +180,7 @@ namespace EyelixEyewear_Project.Controllers
                     Rating = rating,
                     Comment = comment,
                     CreatedAt = DateTime.UtcNow,
-                    IsApproved = true // Auto approve (hoặc false nếu muốn admin duyệt)
+                    IsApproved = true
                 };
 
                 _context.Reviews.Add(review);
@@ -213,10 +230,9 @@ namespace EyelixEyewear_Project.Controllers
                 return Json(new { success = false, products = new List<object>() });
             }
 
-            // Tìm kiếm sản phẩm theo tên
             var products = await _context.Products
                 .Where(p => p.IsActive && p.Name.Contains(query))
-                .Take(8) // Giới hạn 8 kết quả
+                .Take(8)
                 .Select(p => new
                 {
                     id = p.Id,

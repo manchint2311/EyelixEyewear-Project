@@ -12,7 +12,7 @@
 
 @{
     //Xác định ảnh banner và nội dung dựa vào category
-    string bannerImage = "/images/banner/jaehyun.jpg"; // Default
+    string bannerImage = "/images/banner/jaehyun.jpg"; 
     string pageTitle = "All Products";
     string pageSubtitle = "Discover our complete sustainable and stylish eyewear collection";
 
@@ -297,7 +297,7 @@
                              data-filter="@filterString">
 
                             <div class="product-image">
-                                <a href="@Url.Action("Detail", "Product", new { id = item.Id })" title="@item.Name">
+                                <a href="@Url.Action("Detail", "Product", new { name = item.Name })" title="@item.Name">
                                     <img src="@item.ImageUrl" alt="@item.Name" style="transition: opacity 0.3s ease;">
                                 </a>
                                 @if (!string.IsNullOrEmpty(badgeClass))
@@ -310,7 +310,7 @@
                                 <div class="product-category">@item.Category?.Name</div>
 
                                 <div class="product-title">
-                                    <a href="@Url.Action("Detail", "Product", new { id = item.Id })" class="product-title-link">@item.Name</a>
+                                    <a href="@Url.Action("Detail", "Product", new { name = item.Name })" title="@item.Name" class="product-title-link">@item.Name</a>
                                 </div>
 
                                 @if (item.ProductVariants != null && item.ProductVariants.Any())
@@ -399,6 +399,42 @@
                     <p>No products found.</p>
                 }
             </div>
+            <!-- PAGINATION -->
+            @if (ViewBag.TotalPages > 1)
+            {
+                <div class="pagination-wrapper">
+                    <div class="pagination">
+                        @if (ViewBag.CurrentPage > 1)
+                        {
+                            <a href="?page=@(ViewBag.CurrentPage - 1)@(ViewBag.CurrentCategory != null ? "&category=" + ViewBag.CurrentCategory : "")"
+                               class="page-link">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        }
+
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                        {
+                            <a href="?page=@i@(ViewBag.CurrentCategory != null ? "&category=" + ViewBag.CurrentCategory : "")"
+                               class="page-link @(i == ViewBag.CurrentPage ? "active" : "")">
+                                @i
+                            </a>
+                        }
+
+                        @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                        {
+                            <a href="?page=@(ViewBag.CurrentPage + 1)@(ViewBag.CurrentCategory != null ? "&category=" + ViewBag.CurrentCategory : "")"
+                               class="page-link">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        }
+                    </div>
+
+                    <div class="pagination-info">
+                        Showing @((ViewBag.CurrentPage - 1) * 9 + 1) - @(Math.Min(ViewBag.CurrentPage * 9, ViewBag.TotalProducts))
+                        of @ViewBag.TotalProducts products
+                    </div>
+                </div>
+            }
         </main>
     </div>
 </div>

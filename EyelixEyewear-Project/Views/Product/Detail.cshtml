@@ -8,6 +8,31 @@
     <link rel="stylesheet" href="~/css/detail-product.css">
 }
 
+<!-- BREADCRUMB -->
+<nav class="breadcrumb-nav">
+    <div class="container">
+        <ul class="breadcrumb">
+            <li><a href="@Url.Action("Index", "Home")">Home</a></li>
+
+            @if (Model.Product.Collection != null)
+            {
+                <li><span>/</span></li>
+                <li><a href="@Url.Action("Index", "Home")#collections">Collections</a></li>
+                <li><span>/</span></li>
+                <li><a href="@Url.Action("Collection", "Product", new { slug = Model.Product.Collection.Slug })">@Model.Product.Collection.Name</a></li>
+            }
+            else if (Model.Product.Category != null)
+            {
+                <li><span>/</span></li>
+                <li><a href="@Url.Action("Index", "Product", new { category = Model.Product.Category.Name })">@Model.Product.Category.Name</a></li>
+            }
+
+            <li><span>/</span></li>
+            <li class="active">@Model.Product.Name</li>
+        </ul>
+    </div>
+</nav>
+
 <main class="product-detail">
     <div class="container">
         <div class="product-wrapper">
@@ -16,9 +41,21 @@
                     <img src="@Model.Product.ImageUrl" alt="@Model.Product.Name" id="mainImage">
                 </div>
                 <div class="thumbnail-gallery">
+                    <!-- Main product image -->
                     <div class="thumbnail active" onclick="changeImage('@Model.Product.ImageUrl', this)">
                         <img src="@Model.Product.ImageUrl" alt="Main View">
                     </div>
+
+                    <!-- Additional images from ProductImages -->
+                    @if (Model.Product.ProductImages != null && Model.Product.ProductImages.Any())
+                    {
+                        @foreach (var img in Model.Product.ProductImages)
+                        {
+                            <div class="thumbnail" onclick="changeImage('@img.ImageUrl', this)">
+                                <img src="@img.ImageUrl" alt="@Model.Product.Name">
+                            </div>
+                        }
+                    }
                 </div>
             </div>
 
@@ -30,8 +67,7 @@
                     </p>
                     <p class="sku-info">
                         <span class="meta-label">SKU:</span>
-                        <span class="meta-value">EYE-@Model.Product.Id.ToString("D4")</span>
-                    </p>
+                        <span class="meta-value">@Model.Product.SKU</span>
                 </div>
 
                 <h1 class="product-title">@Model.Product.Name</h1>
@@ -89,10 +125,42 @@
                 <div class="shipping-info">
                     <h3>Shipping Information</h3>
                     <table class="shipping-table">
+                        <thead>
+                            <tr>
+                                <th>Zone</th>
+                                <th>Shipping Method(s) & Cost</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             <tr>
-                                <td>Nationwide</td>
-                                <td>Standard Shipping – 20.000 VND</td>
+                                <td class="zone-label">Local (HCMC)</td>
+                                <td>
+                                    <div class="shipping-option">
+                                        <strong>Fast Shipping</strong> – 20,000 VND
+                                    </div>
+                                    <div class="shipping-option">
+                                        <strong>Instant Shipping</strong> – 50,000 VND 
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="zone-label">Domestic</td>
+                                <td>
+                                    <div class="shipping-option">
+                                        <strong>Standard Shipping</strong> – 25,000 VND
+                                    </div>
+                                    <div class="shipping-option">
+                                        <strong>Fast Shipping</strong> – 30,000 VND
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="zone-label">Worldwide</td>
+                                <td>
+                                    <div class="shipping-option">
+                                        <strong>International Shipping</strong> – 250,000 VND
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -262,7 +330,7 @@
             <div class="related-grid">
                 @foreach (var related in Model.RelatedProducts)
                 {
-                    <a href="@Url.Action("Detail", "Product", new { id = related.Id })" class="product-card">
+                        <a href="@Url.Action("Detail", "Product", new { name = related.Name })" class="product-card">
                         <div class="product-card-image">
                             @if (related.DiscountPrice.HasValue)
                             {

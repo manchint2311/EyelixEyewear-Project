@@ -4,6 +4,7 @@ using EyelixEyewear_Project.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EyelixEyewear_Project.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251223032037_AddProductImageGallery")]
+    partial class AddProductImageGallery
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -518,14 +521,9 @@ namespace EyelixEyewear_Project.Migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ProductImageId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
-
-                    b.HasIndex("ProductImageId");
 
                     b.ToTable("ProductImages");
 
@@ -803,10 +801,6 @@ namespace EyelixEyewear_Project.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EyelixEyewear_Project.Models.ProductImage", null)
-                        .WithMany("ProductImages")
-                        .HasForeignKey("ProductImageId");
-
                     b.Navigation("Product");
                 });
 
@@ -871,11 +865,6 @@ namespace EyelixEyewear_Project.Migrations
                     b.Navigation("ProductVariants");
 
                     b.Navigation("Reviews");
-                });
-
-            modelBuilder.Entity("EyelixEyewear_Project.Models.ProductImage", b =>
-                {
-                    b.Navigation("ProductImages");
                 });
 
             modelBuilder.Entity("EyelixEyewear_Project.Models.User", b =>

@@ -949,3 +949,69 @@
         display: none;
     }
 }
+
+/* ==========================================
+   PAGINATION STYLES
+   ========================================== */
+
+.pagination-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin: 3rem 0;
+}
+
+.pagination {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    color: #333;
+    text-decoration: none;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+
+    .page-link:hover {
+        background: #f5f5f5;
+        border-color: #333;
+    }
+
+    .page-link.active {
+        background: #2c2c2c;
+        color: white;
+        border-color: #2c2c2c;
+    }
+
+    .page-link i {
+        font-size: 14px;
+    }
+
+.pagination-info {
+    font-size: 14px;
+    color: #687279;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .page-link {
+        width: 35px;
+        height: 35px;
+        font-size: 13px;
+    }
+}

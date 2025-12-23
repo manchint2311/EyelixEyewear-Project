@@ -23,13 +23,14 @@ namespace EyelixEyewear_Project.Data
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<ProductVariant> ProductVariants { get; set; }
+        public DbSet<ProductImage> ProductImages { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // ==========================================
-            // 2. FLUENT API
-            // ==========================================
+            // ======
+            // API
+            // ======
 
             // Product -> Category
             modelBuilder.Entity<Product>()
@@ -38,20 +39,20 @@ namespace EyelixEyewear_Project.Data
                 .HasForeignKey(p => p.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            //Product -> Collection
-            //modelBuilder.Entity<Product>()
-            //    .HasOne(p => p.Collection)
-            //    .WithMany(c => c.Products)
-            //    .HasForeignKey(p => p.CollectionId)
-            //   .OnDelete(DeleteBehavior.SetNull);
-
-            // Config Decimal (Tiền tệ)
+            // Tiền tệ
             modelBuilder.Entity<Product>().Property(p => p.Price).HasColumnType("decimal(18,2)");
             modelBuilder.Entity<Product>().Property(p => p.DiscountPrice).HasColumnType("decimal(18,2)");
             modelBuilder.Entity<Order>().Property(o => o.TotalAmount).HasColumnType("decimal(18,2)");
             modelBuilder.Entity<Order>().Property(o => o.ShippingFee).HasColumnType("decimal(18,2)");
             modelBuilder.Entity<Order>().Property(o => o.Discount).HasColumnType("decimal(18,2)");
             modelBuilder.Entity<OrderDetail>().Property(od => od.Price).HasColumnType("decimal(18,2)");
+
+            // Product -> ProductImages
+            modelBuilder.Entity<ProductImage>()
+                .HasOne(pi => pi.Product)
+                .WithMany(p => p.ProductImages)
+                .HasForeignKey(pi => pi.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Order -> User
             modelBuilder.Entity<Order>()
@@ -323,6 +324,13 @@ namespace EyelixEyewear_Project.Data
                     IsActive = true,
                     CreatedAt = createdDate
                 }
+            );
+
+            // SEED IMAGE GALLERY FOR PRODUCTS
+            modelBuilder.Entity<ProductImage>().HasData(
+                new ProductImage { Id = 1, ProductId = 1, ImageUrl = "/images/products/oris-side.jpg" },
+                new ProductImage { Id = 2, ProductId = 1, ImageUrl = "/images/products/oris-front.jpg" },
+                new ProductImage { Id = 3, ProductId = 1, ImageUrl = "/images/products/oris-model.jpg" }
             );
         }
     }

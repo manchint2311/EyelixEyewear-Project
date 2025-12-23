@@ -23,8 +23,6 @@ public class Product
     public int Stock { get; set; }
 
     public string? ImageUrl { get; set; }
-
-    // Thông số kỹ thuật
     public string? FrameMaterial { get; set; }
     public string? LensMaterial { get; set; }
     public string? FrameShape { get; set; }
@@ -36,16 +34,16 @@ public class Product
 
     [Required]
     [MaxLength(50)]
-    public string SKU { get; set; } = string.Empty; // ← Sửa thành public
+    public string SKU { get; set; } = string.Empty; 
 
     // Navigation Properties
     public Category Category { get; set; } = null!;
-    public Collection? Collection { get; set; } // ← BỎ COMMENT DÒNG NÀY!
+    public Collection? Collection { get; set; }
     public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
     public ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
     public ICollection<ProductVariant> ProductVariants { get; set; } = new List<ProductVariant>();
-
+    public ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
     public bool IsActive { get; set; } = true;

@@ -193,30 +193,6 @@ namespace EyelixEyewear_Project.Controllers
             });
         }
 
-        // ==========================================
-        // TOGGLE CUSTOMER STATUS (Block/Unblock)
-        // ==========================================
-        [HttpPost]
-        public async Task<IActionResult> ToggleCustomerStatus(int id)
-        {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return Json(new { success = false, message = "Customer not found" });
-            }
-
-            user.IsActive = !user.IsActive;
-            await _context.SaveChangesAsync();
-
-            string status = user.IsActive ? "activated" : "blocked";
-            return Json(new
-            {
-                success = true,
-                message = $"Customer {status} successfully",
-                isActive = user.IsActive
-            });
-        }
-
         // ===============
         // DELETE CUSTOMER 
         // ================
@@ -374,8 +350,10 @@ namespace EyelixEyewear_Project.Controllers
         public IActionResult GetProduct(int id)
         {
             var product = _context.Products
-            .AsNoTracking()
-            .FirstOrDefault(p => p.Id == id);
+                .Include(p => p.ProductImages)
+                .AsNoTracking()
+                .FirstOrDefault(p => p.Id == id);
+
             if (product == null)
             {
                 return NotFound();
@@ -397,9 +375,14 @@ namespace EyelixEyewear_Project.Controllers
                 color = product.Color,
                 categoryId = product.CategoryId,
                 collectionId = product.CollectionId,
-                isActive = product.IsActive
+                isActive = product.IsActive,
+                galleryImages = product.ProductImages.Select(img => new {
+                    id = img.Id,
+                    url = img.ImageUrl
+                }).ToList()
             });
         }
+
 
         // ================
         // 8. ADD PRODUCT 
@@ -437,6 +420,21 @@ namespace EyelixEyewear_Project.Controllers
                 _context.Products.Add(product);
                 _context.SaveChanges();
 
+                // ✅ ADD GALLERY IMAGES
+                if (model.GalleryImages != null && model.GalleryImages.Any())
+                {
+                    foreach (var imageUrl in model.GalleryImages)
+                    {
+                        var productImage = new ProductImage
+                        {
+                            ProductId = product.Id,
+                            ImageUrl = imageUrl
+                        };
+                        _context.ProductImages.Add(productImage);
+                    }
+                    _context.SaveChanges();
+                }
+
                 return Json(new { success = true, message = "Product added successfully!" });
             }
             catch (Exception ex)
@@ -444,6 +442,7 @@ namespace EyelixEyewear_Project.Controllers
                 return Json(new { success = false, message = "Error: " + ex.Message });
             }
         }
+
 
         // ==================
         // 9. EDIT PRODUCT 
@@ -453,7 +452,12 @@ namespace EyelixEyewear_Project.Controllers
         {
             try
             {
-                var product = _context.Products.Find(model.Id);
+                _context.ChangeTracker.Clear();
+
+                var product = _context.Products
+                    .Include(p => p.ProductImages)
+                    .FirstOrDefault(p => p.Id == model.Id);
+
                 if (product == null)
                 {
                     return Json(new { success = false, message = "Product not found" });
@@ -465,7 +469,7 @@ namespace EyelixEyewear_Project.Controllers
                     return Json(new { success = false, message = "SKU already exists" });
                 }
 
-                // Update ALL fields - không để EF tự detect
+                // Update product info
                 product.Name = model.Name;
                 product.SKU = model.SKU;
                 product.Description = model.Description;
@@ -478,12 +482,31 @@ namespace EyelixEyewear_Project.Controllers
                 product.FrameShape = model.FrameShape;
                 product.Color = model.Color;
                 product.CategoryId = model.CategoryId;
-                product.CollectionId = model.CollectionId; // Đã có rồi
+                product.CollectionId = model.CollectionId;
                 product.IsActive = model.IsActive;
                 product.UpdatedAt = DateTime.UtcNow;
 
-                // THÊM DÒNG NÀY: Force EF mark entity as modified
-                _context.Entry(product).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                _context.Entry(product).State = EntityState.Modified;
+
+                // Remove old gallery images
+                if (product.ProductImages.Any())
+                {
+                    _context.ProductImages.RemoveRange(product.ProductImages);
+                }
+
+                // Add new gallery images
+                if (model.GalleryImages != null && model.GalleryImages.Any())
+                {
+                    foreach (var imageUrl in model.GalleryImages)
+                    {
+                        var productImage = new ProductImage
+                        {
+                            ProductId = product.Id,
+                            ImageUrl = imageUrl
+                        };
+                        _context.ProductImages.Add(productImage);
+                    }
+                }
 
                 _context.SaveChanges();
 
@@ -494,6 +517,7 @@ namespace EyelixEyewear_Project.Controllers
                 return Json(new { success = false, message = "Error: " + ex.Message });
             }
         }
+
 
         // ==========================================
         // 11. TOGGLE PRODUCT ACTIVE/INACTIVE
@@ -547,6 +571,31 @@ namespace EyelixEyewear_Project.Controllers
             _context.SaveChanges();
 
             return Json(new { success = true, message = "Product deleted successfully" });
+        }
+
+        // ==========================================
+        // DELETE GALLERY IMAGE
+        // ==========================================
+        [HttpPost]
+        public async Task<IActionResult> DeleteGalleryImage(int imageId)
+        {
+            try
+            {
+                var image = await _context.ProductImages.FindAsync(imageId);
+                if (image == null)
+                {
+                    return Json(new { success = false, message = "Image not found" });
+                }
+
+                _context.ProductImages.Remove(image);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Image deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
         }
 
         // ==========================================
