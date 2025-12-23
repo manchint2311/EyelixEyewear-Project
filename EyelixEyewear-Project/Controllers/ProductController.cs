@@ -100,9 +100,9 @@ namespace EyelixEyewear_Project.Controllers
             return View(products);
         }
 
-        public async Task<IActionResult> Detail(string name)
+        public async Task<IActionResult> Detail(int id)
         {
-            if (string.IsNullOrEmpty(name)) return NotFound();
+            if (id <= 0) return NotFound();
 
             var product = await _context.Products
                 .Include(p => p.Category)
@@ -111,7 +111,7 @@ namespace EyelixEyewear_Project.Controllers
                 .Include(p => p.ProductImages)
                 .Include(p => p.Reviews.Where(r => r.IsApproved))
                     .ThenInclude(r => r.User)
-                .FirstOrDefaultAsync(p => p.Name == name && p.IsActive);
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
             {
@@ -121,8 +121,7 @@ namespace EyelixEyewear_Project.Controllers
             // Get related products
             var relatedProducts = await _context.Products
                 .Include(p => p.Reviews)
-                .Where(p => p.CategoryId == product.CategoryId && p.Id != product.Id && p.IsActive)
-                .Take(4)
+                .Where(p => p.CategoryId == product.CategoryId && p.Id != id && p.IsActive)
                 .ToListAsync();
 
             var viewModel = new ProductDetailViewModel

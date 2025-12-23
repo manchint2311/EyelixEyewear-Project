@@ -51,12 +51,12 @@
                                         <span class="new-badge">NEW</span>
                                     }
 
-                                    <a asp-controller="Product" asp-action="Detail" asp-route-name="@product.Name">
+                                    <a asp-controller="Product" asp-action="Detail" asp-route-id="@product.Id">
                                         <img src="@product.ImageUrl" alt="@product.Name">
                                     </a>
                                 </div>
                                 <div class="product-info">
-                                    <h3><a asp-controller="Product" asp-action="Detail" asp-route-name="@product.Name">@product.Name</a></h3>
+                                    <h3><a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id">@product.Name</a></h3>
                                     <div class="product-price">
                                         @if (product.DiscountPrice.HasValue)
                                         {

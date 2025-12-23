@@ -263,7 +263,7 @@
                              data-filter="@filterString">
 
                             <div class="product-image">
-                                <a href="@Url.Action("Detail", "Product", new { name = item.Name })" title="@item.Name">
+                                <a href="@Url.Action("Detail", "Product", new { id = item.Id })" title="@item.Name">
                                     <img src="@item.ImageUrl" alt="@item.Name" style="transition: opacity 0.3s ease;">
                                 </a>
                                 @if (!string.IsNullOrEmpty(badgeClass))
@@ -276,7 +276,7 @@
                                 <div class="product-category">@item.Category?.Name</div>
 
                                 <div class="product-title">
-                                    <a href="@Url.Action("Detail", "Product", new { name = item.Name })" class="product-title-link">@item.Name</a>
+                                    <a href="@Url.Action("Detail", "Product", new { id = item.Id })" class="product-title-link">@item.Name</a>
                                 </div>
 
                                 @if (item.ProductVariants != null && item.ProductVariants.Any())

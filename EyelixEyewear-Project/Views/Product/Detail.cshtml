@@ -330,7 +330,7 @@
             <div class="related-grid">
                 @foreach (var related in Model.RelatedProducts)
                 {
-                        <a href="@Url.Action("Detail", "Product", new { name = related.Name })" class="product-card">
+                        <a href="@Url.Action("Detail", "Product", new { id = related.Id })" class="product-card">
                         <div class="product-card-image">
                             @if (related.DiscountPrice.HasValue)
                             {

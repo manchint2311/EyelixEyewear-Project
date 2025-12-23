@@ -58,12 +58,6 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
-app.MapControllerRoute(
-    name: "productDetail",
-    pattern: "Product/{name}",
-    defaults: new { controller = "Product", action = "Detail" }
-);
-
 // Route cho collection
 app.MapControllerRoute(
     name: "collection",
